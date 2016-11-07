@@ -1,0 +1,16 @@
+{
+  "prefix" : "/",
+  "routesDir" : "routes",
+  "routes" : {
+    "wojtech" : {
+      "file" : "wojtech.js"
+    },
+    "R" : {
+      "file" : "rLanguage.js",
+      "params" : {
+        "rBinPath": "/usr/local/bin/",
+        "dbPath" : ["R","Scripts"]
+      }
+    }
+  }
+}

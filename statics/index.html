@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>React test</title>
+    <script src='js/oidc-client.js'></script>
+</head>
+<body>
+    <div id="ContentHolder"></div>
+    <script>
+        window.console.Log = window.console.log;
+        if(window.chrome) {
+            window.console.log = function() { var dt=new Date(),ms=('00'+dt.getMilliseconds()).substr(-3),dts=dt.toTimeString().substr(0,8)+"."+ms;window.console.trace("%s: %o",dts,arguments.length>1?arguments:arguments[0]);};
+            window.console.warn = function() { window.console.trace("Warning: %o", arguments.length > 1 ? arguments : arguments[0]);};
+        }
+    </script>
+    <script type="application/javascript" src="/js/do-it.bundle.js"></script>
+</body>
+</html>

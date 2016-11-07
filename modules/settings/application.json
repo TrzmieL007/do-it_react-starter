@@ -1,0 +1,5 @@
+{
+  "favicon" : "favicon.ico",
+  "staticFiles" : "statics",
+  "sessionSecret" : "superSecretSessionString"
+}

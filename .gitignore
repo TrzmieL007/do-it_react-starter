@@ -1,0 +1,26 @@
+# Dependencies
+node_modules
+bower_components
+
+# Windows stuff
+Thumbs.db
+
+# Mac OS X stuff
+.DS_Store
+.Trashes
+
+# Build
+dist
+packages
+build
+
+# Others
+app/data
+.idea
+.vscode
+npm-debug.log
+logs
+*.swp
+db/
+*do-it.bundle.js
+!*.keepFolder

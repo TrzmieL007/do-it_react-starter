@@ -1,0 +1,34 @@
+{
+  "files" : {
+    "logger" : {
+      "fileName" : "logger.json"
+    },
+    "httpServer" : {
+      "fileName" : "server.json"
+    },
+    "app" : {
+      "fileName" : "application.json"
+    },
+    "webSockets" : {
+      "fileName" : "webSockets.json"
+    },
+    "dbConnectors" : {
+      "fileName" : "dbConnectors.json"
+    },
+    "databases" : {
+      "fileName" : "database.json"
+    },
+    "routes" : {
+      "fileName" : "router.json"
+    },
+    "executors" : {
+      "fileName" : "executors.json"
+    },
+    "heplers" : {
+      "fileName" : "hlprs.json"
+    }
+  },
+  "globals" : {
+    "urlSeparator" : ","
+  }
+}

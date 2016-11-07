@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+    <style type="text/css">
+        td {
+            font-family: monospace;
+            padding: 0 4px;
+        }
+    </style>
+    <script src="/js/jquery-3.1.0.min.js"></script>
+    <script src="/js/oidc-client.js"></script>
+    <script>
+        function deleteUser(id){
+            $.ajax({
+                url: '/wojtech/users',
+                data: {id:id},
+                method: 'DELETE'
+            }).always(getUsers);
+        }
+        function editUser(userString){
+            var user = JSON.parse(userString.replace(/'/g,'"'));
+            $('#login-'+user.id).html('<input id="loginField-'+user.id+'" value="'+user.login+'"/>');
+            $('#password-'+user.id).html('<input id="passwordField-'+user.id+'" type="password" />');
+            $('#type-'+user.id).html('<input id="typeField-'+user.id+'" type="checkbox" '+(user.user_type == 1 ? 'checked' : '')+'/>');
+            $('#editBt-'+user.id).html('<button onClick="editUserSend('+user.id+')">save</button>');
+        }
+        function editUserSend(id){
+            $.post('/wojtech/users',{
+                id: id,
+                login: $('#loginField-'+id).val(),
+                password: $('#passwordField-'+id).val().length ? $('#passwordField-'+id).val() : null,
+                user_type: $('#typeField-'+id)[0].checked ? 1 : 0
+            }).always(getUsers);
+        }
+        function getUsers(){
+            $.get('/wojtech/users',null,function(data){
+                var users = data.content;
+                var q = "\\'";
+                var table = '<table><tr><th>ID</th><th>Login</th><th>password hash</th><th>user type</th><th>edit</th><th>delete</th></tr>';
+                users.forEach(function(user){
+                    table += '<tr><td>'
+                            +user.id
+                            +'</td><td id="login-'+user.id+'">'
+                            +user.login
+                            +'</td><td id="password-'+user.id+'">'
+                            +user.password
+                            +'</td><td id="type-'+user.id+'">'
+                            +user.user_type
+                            +'</td><td id="editBt-'+user.id+'"><button onClick="editUser(\''
+                            +JSON.stringify(user).replace(/"/g,q)
+                            +'\')">edit</button></td><td><button onClick="deleteUser('
+                            +user.id
+                            +')">X</button></td></tr>';
+                });
+                table += '</table>';
+                $('#usersList').html(table);
+            }).always(console.info('requested users'));
+        }
+        function insertUser(){
+            $.ajax({
+                url: '/wojtech/users',
+                data: {login: $('[name="login"]').val(), password: $('[name="password"]').val()},
+                method: 'PUT'
+            })
+                .done(function(){
+                    console.log(arguments);
+                    getUsers();
+                })
+                .fail(function(){
+                    console.log(arguments);
+                })
+                .always(function(){console.info('pushed user to db')});
+        }
+        var signinResponse;
+        function checkLogin(){
+            return new Promise(function(resolve,reject) {
+                var ea;
+                if (window.location.hash) {
+                    var settings = {
+                        authority: 'https://accounts.doitprofiler.net/',
+                        client_id: 'ClientAssessments',
+                        redirect_uri: 'http://localhost:8080',
+                        post_logout_redirect_uri: 'http://localhost:8080/istry.html',
+                        response_type: 'id_token token',
+                        scope: 'openid profile email roles',
+                        acr_values: "clientCode:gauwec15stl",
+
+                        filterProtocolClaims: true,
+                        loadUserInfo: true
+                    };
+                    var client = new Oidc.OidcClient(settings);
+                    client.processSigninResponse().then(function (response) {
+                        signinResponse = response;
+                        console.log(response);
+                        localStorage.setItem('expires_at', response.expires_at);
+                        localStorage.setItem('profile', btoa(JSON.stringify(response.profile)));
+                        localStorage.setItem('id_token', response.id_token);
+                        localStorage.setItem('access_token', response.access_token);
+                        //window.history.replaceState(null, 'Test', window.location.href.replace(window.location.hash, ''));
+                        return resolve();
+                    }).catch(function (err) {
+                        console.error('ERROR: %o', err);
+                        return reject();
+                    });
+                }else if (!!(ea = localStorage.getItem('expires_at')) && (ea * 1000 > +(new Date()))) {
+                    return resolve();
+                }else {
+                    return !!signinResponse ? resolve() : reject();
+                }
+            });
+        }
+
+        var ws;
+        $(function(){
+            $('body').hide();
+            checkLogin().then(function(){
+                console.log('haha, I\'m logged :D');
+                $('body').show();
+            },function(){
+                console.error('Ups, I\'m not logged :(');
+                window.location.href = 'http://localhost:8080/istry.html';
+            });
+            ws = new window.WebSocket('ws://localhost:8080/ws');
+            ws.onmessage = function(message){
+                var messageTxt = JSON.parse(message.data);
+                if(messageTxt.R){
+                    var ro = messageTxt.R.stdout;
+                    var re = '<div style="color:red;">'+messageTxt.R.stderr+'</div>';
+                    $('#rResult').append(ro||re);
+                }
+                console.log(message);
+            };
+            ws.onclose = function(){ console.log('Connection closed :)'); };
+            $("#submitbutton").click(function() {
+                $.get('/ws',{message:'getMessage'}).always(function(){
+                    $.post('/ws',{message:'postMessage'});
+                });
+            });
+            /*//set CORS to call "stocks" package on public server
+            ocpu.seturl("//localhost:6254/ocpu/library/pier/R");
+
+
+            $("#submitbutton").click(function() {
+
+                var req = ocpu.rpc("test", {
+                    x: 25
+                }, function (output) {
+                    $('body').append("<div>output: <pre>" + output + "</pre></div>");
+                });
+
+                //optional
+                req.fail(function () {
+                    alert("R returned an error: " + req.responseText);
+                });
+            });*/
+            getUsers();
+        });
+        function executeRCode(){
+            document.getElementById('executeR').disabled = true;
+            $('#rResult').text('');
+            $.post('/wojtech/R',{command:$('#rCode').val()})
+                    .done(function(r){
+//                        $('#rResult').text(r.content.executed + "\n" + r.content.stdout);
+//                        if(r.content.stderr){
+//                            $('#rResult').html('<span style="color:red;">'+r.content.stderr+'</span>');
+//                        }
+                    })
+                    .fail(function(error){
+//                        if(error.responseJSON.error && error.responseJSON.error.stderr)
+//                            $('#rResult').html('r.content.executed\n<span style="color:red;">'+error.responseJSON.error.stderr+"\n"+JSON.stringify(error.responseJSON,null,4)+'</span>');
+                    })
+                    .always(function(){
+                        document.getElementById('executeR').disabled = null;
+                    });
+        }
+    </script>
+    <script type="text/javascript" src="js/barChart.js"></script>
+</head>
+<body>
+    This page is here just for testing purposes right now.
+    <button id="submitbutton">calc</button>
+    <div id="usersList"></div>
+    <div>
+        Login: <input type="text" name="login" /><br/>
+        Password: <input type="password" name="password" /><br/>
+        <input type="button" value="Add user" onClick="insertUser();">
+    </div>
+    <div>
+        <textarea id="rCode" placeholder="write R code to evaluate"></textarea>
+        <button id="executeR" onClick="executeRCode()">Evaluate</button>
+        <pre id="rResult"></pre>
+    </div>
+    <button id="RandomTest" onClick="doRandomTest()">Gen random chart with random colors</button>&nbsp; &nbsp;
+    <button id="MultipleTests" onClick="startsTests()">Run many tests</button>
+    <button id="stopMultipleTests" onClick="stopTests()">Stop</button>
+    <input type="number" id="freq" value="0.5" style="text-align: right;width:4em;" />s
+    <br/>
+    <script type="text/javascript">
+        var interval;
+        function stopTests(){
+            clearInterval(interval);
+            document.getElementById('RandomTest').disabled = false;
+            document.getElementById('MultipleTests').disabled = false;
+            document.getElementById('freq').disabled = false;
+            document.getElementById('stopMultipleTests').disabled = true;
+        }
+        function startsTests(){
+            document.getElementById('RandomTest').disabled = true;
+            document.getElementById('MultipleTests').disabled = true;
+            document.getElementById('freq').disabled = true;
+            document.getElementById('stopMultipleTests').disabled = false;
+            interval = window.setInterval(doRandomTest,parseInt(Math.abs(parseFloat(document.getElementById('freq').value.replace(',','.')))*1000) || 128);
+        }
+        function doRandomTest(){
+            random((Math.random()*100)%100,(Math.random()*10 < 5));
+        }
+    </script>
+</body>
+</html>
+
+<!--//
+library(svglite)
+x<-runif(1e3)
+y<-runif(1e3)
+
+tmp1<-"/var/tmpfile"
+system.time({
+svglite(tmp1)
+plot(x,y)
+dev.off()
+})
+print(tmp1)
+//-->

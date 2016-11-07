@@ -1,0 +1,23 @@
+{
+  "mode": "dev",
+  "mySQL": {
+    "dev": {
+      "localAddress" : "127.0.0.1",
+      "port" : "3306",
+      "user" : "root",
+      "password" : "Vdzy)*EWU1vW",
+      "database" : "wojtech",
+      "connectionLimit" : 15,
+      "supportBigNumbers" : true
+    },
+    "prod": {
+
+    }
+  },
+  "static": {
+    "dev" : {
+      "relativePath" : ["db","static"],
+      "absolutePath" : null
+    }
+  }
+}

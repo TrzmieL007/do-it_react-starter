@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Scripts</title>
+    <link rel="stylesheet" href="/stylesheets/r.css">
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <script src='/js/jquery-3.1.0.min.js'></script>
+</head>
+<body id="browser">
+    <div id="topRow">
+        <ul id="list">
+            <a href="/R/rScript">Write new Script</a>
+            <!--// FileList //-->
+            <br/>
+            <li id="clearSelection">clear</li>
+            <form action="/R/file" enctype="multipart/form-data" method="POST" id="uploadRfile">
+                <input type="file" name="Rscript" /><br/>
+                <input type="button" id="choseScript" value="Chose script" /><br/>
+                <code id="chosenScript"></code>
+                <input type="button" onClick="uploadFile()" value="Upload script" />
+            </form>
+        </ul>
+        <code id="content"><!--// FileContent //--></code>
+    </div>
+    <code id="console"><!--// ConsoleLine //--></code>
+    <div style="visibility:hidden;height:0;width:0;">
+        <div id="hiddenButtons">
+            <input type="text" id="arguments" placeholder="execution arguments"/><button onClick="executeScript()">execute</button> <button onClick="deleteFile()" class="del">X</button>
+            <button onClick="editScript()">edit</button>
+        </div>
+        <div id="consoleButtons"><button onClick="clearConsole();">(clear)</button> <button onClick="hideConsole();">(X)</button></div>
+    </div>
+    <script>
+        var selectedScript;
+        var ws;
+        var list;
+        var buttons;
+        var consoleButtons;
+        function uploadFile() {
+            var formData = new FormData(document.getElementById('uploadRfile'));
+            var p = document.createElement('div');
+            p.className = 'loadAjax prepare';
+            document.body.appendChild(p);
+            if(!$('form input[type="file"][name="Rscript"]')[0].value){
+                return false;
+            }
+            $.ajax({
+                url: '/R/R',
+                type: 'PUT',
+                xhr: function(){
+                    myXhr = $.ajaxSettings.xhr();
+                    if(myXhr.upload){
+                        myXhr.upload.addEventListener('progress', function(e){
+                            var width = parseInt((e.loaded / e.total)*100);
+                            if(p.classList.contains('prepare')) p.classList.remove('prepare');
+                            p.style.width = width+'%';
+                            var d = new Date();
+//                            console.info("loaded %o of %o -> %o %%",e.loaded,e.total,Math.ceil((e.loaded/e.total)*10000)/100);
+                        }, false);
+                    }
+                    return myXhr;
+                },
+                success: completeHandler = function(data){
+//                    console.log(data);
+                    var fname = data.content.filename;
+                    $('#list').prepend('<li data-fname="'+fname+'">'+fname+'</li>');
+                    if(window.location.search.match(new RegExp("\\?file="+fname,'i'))){
+                        window.history.replaceState(window.history.state,null,window.location.origin+window.location.pathname);
+                    }
+                    liHandler($('#list li:first-child')[0],fname);
+                    $('#list li:first-child').click();
+                    $('form input[type="file"][name="Rscript"]')[0].value = '';
+                    $('form#uploadRfile #chosenScript').html('');
+                },
+                error: errorHandler = function(xhr){
+                    var response = xhr.responseJSON ? xhr.responseJSON : JSON.parse(xhr.responseText);
+//                    console.log(response.content);
+                    if(response.content.message && response.content.fname){
+                        writeToConsole('<span style="color:#ff0000;">Error sending '+response.content.fname+' - '+response.content.message+'</span><br/>',1);
+                    }
+                    if(p){ p.classList.add('error'); }
+                },
+                complete: alwaysHandler = function(){
+                    if(p){
+                        if(!p.style.width || parseInt(p.style.width) < 100) p.style.width = '100%';
+                        if(p.classList.contains('prepare')) p.classList.remove('prepare');
+                        p.classList.add('always');
+                        setTimeout(function () {
+                            if(document.body.contains(p)) document.body.removeChild(p);
+                        }, 2000);
+                    }
+                },
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false
+            }, 'json');
+        }
+        function executeScript(fname){
+            fname = fname || selectedScript;
+            if(!fname){
+                return alert('Ann error occured! No file was chosen for execution.');
+            }
+            var data = { filename : fname };
+            if(document.getElementById('arguments').value){
+                data.arguments = document.getElementById('arguments').value;
+            }
+            $.post(window.location.origin+'/R/R', data, function(data){
+                console.log(data);
+                if(data.content.filesProuced){
+                    data.content.filesProuced.forEach(function(c){
+                        if(c.filename.match(/.+\.png/)){
+                            return writeToConsole('<img src="data:image/png;base64,'+c.content+'" /><br/>');
+                        }
+                        if(c.filename.match(/.+\.svg/)){
+                            return writeToConsole(atob(c.content)+"\n");
+                        }
+                    });
+                }
+            }).fail(function(xhr){
+                if(xhr.status == 403){
+                    var response = xhr.responseJSON ? xhr.responseJSON : JSON.parse(xhr.responseText);
+                    writeToConsole('<span style="color:#ff0000;">Error! '+response.content+'</span><br/>',1);
+                }
+            });
+        }
+        function deleteFile(fname){
+            fname = fname || selectedScript;
+            if(!fname){
+                return alert('Ann error occured! No file was chosen for deletion.');
+            }
+            if(window.confirm('Delete file: '+fname+'?',"Are you sure you want to delete the file '"+fname+"' permanently?")) {
+                $.ajax({
+                    method: 'DELETE',
+                    url: window.location.origin + '/R/rScript',
+                    data: {fileName: fname}
+                }).done(function (data) {
+//                    console.log(data);
+                    if (data.result) {
+                        $('li').each(function () {
+                            if (this.dataset.fname == fname) {
+                                this.parentNode.removeChild(this);
+                            }
+                        });
+                        if(window.location.search.match(new RegExp("\\?file="+fname,'i'))){
+                            window.history.replaceState(window.history.state,null,window.location.origin+window.location.pathname);
+                        }
+                        $('#clearSelection').click();
+                    }
+                });
+            }
+        }
+        function editScript(fname){
+            fname = fname || selectedScript;
+            if(!fname){
+                return alert('Ann error occured! No file was chosen for edition.');
+            }
+            window.location.href = window.location.origin + '/R/rScript?file='+fname;
+        }
+        function liHandler(elem,fName){
+            $(list).each(function(){
+                this.classList.remove('selected');
+            });
+            elem.classList.add('selected');
+            selectedScript = fName;
+            $.post(
+                    window.location.origin+window.location.pathname,
+                    { filename : fName }
+            ).done(function(data){
+                $('#content').text(data.result ? data.content : '').append(buttons.cloneNode(true));
+            }).fail(function(){ console.log(arguments); });
+        }
+        function writeToConsole(content,commandPrompt){
+            if(!$('#console').text()) $('#console').append(consoleButtons.cloneNode(true));
+            if(!$('#console').is(':visible')) $('#console').show();
+            var lead = commandPrompt ? (typeof commandPrompt == 'string' ? commandPrompt+' ' : 'rconsole:root # ') : '';
+            $('#console').append(lead+content);
+//                    $("#console").animate({ scrollTop: $("#console")[0].scrollHeight }, 256);
+            document.getElementById('console').scrollTop = document.getElementById('console').scrollHeight;
+        }
+        function clearConsole(){
+            document.getElementById('console').innerHTML = '';
+        }
+        function hideConsole(){
+            $('#console').hide();
+        }
+        $(function(){
+            buttons = document.getElementById('hiddenButtons');
+            consoleButtons = document.getElementById('consoleButtons');
+            list = $('li');
+            ws = new window.WebSocket('ws://'+window.location.host+'/ws');
+            ws.onmessage = function(message){
+                var messageTxt = JSON.parse(message.data);
+                if(messageTxt.R){
+                    var ro = messageTxt.R.stdout;
+                    var re = '<div style="color:#ff0000;">'+messageTxt.R.stderr+'</div>';
+                    writeToConsole(ro || re);
+                }else if(messageTxt.Rcommand){
+                    writeToConsole(messageTxt.Rcommand,true);
+                }
+            };
+            var query = window.location.search.substr(1).split('&').reduce(function(p,c){
+                var keyVal = c.split('=');
+                p[keyVal[0]] = keyVal[1];
+                return p;
+            },{});
+            if(query.file){
+                selectedScript = query.file;
+                $(list).each(function(){
+                    if(this.dataset.fname == query.file)
+                        this.classList.add('selected');
+                });
+            }
+            if($('#content').text()){
+                $('#content').append(buttons.cloneNode(true));
+            }
+            $('#console').hide();
+            $(list).each(function(){
+                var fName = this.dataset.fname;
+                if(!fName){
+                    $(this).click(function() {
+                        selectedScript = null;
+                        $(list).each(function () {
+                            this.classList.remove('selected');
+                        });
+                        $('#content').text('');
+                    });
+                    return;
+                }
+                $(this).click(function(){
+                    liHandler(this,fName);
+                });
+            });
+            $('#choseScript').click(function(){
+                $('form input[type="file"][name="Rscript"]').click();
+            });
+            $('form input[type="file"][name="Rscript"]').change(function(e){
+                var filename = e.target.value;
+                if(filename.match(/\\/)){
+                    filename = filename.substr(filename.lastIndexOf('\\')+1);
+                }else if(filename.match(/\//)){
+                    filename = filename.substr(filename.lastIndexOf('/')+1);
+                }
+                if(filename && !filename.match(/\.R$/i)){
+                    e.target.value = '';
+                    $('form#uploadRfile #chosenScript').html('');
+                    return writeToConsole('<span style="color:#ff0000;">Error sending '+filename+' - File is not Rscript file, or have wrong extension.</span><br/>',true);
+                }
+                $('form#uploadRfile #chosenScript').html(filename);
+            });
+//            $('form#uploadRfile').submit(function(e){
+//                if(e.preventDefault) e.preventDefault();
+//                return uploadFile();
+//            })
+        });
+    </script>
+</body>
+</html>

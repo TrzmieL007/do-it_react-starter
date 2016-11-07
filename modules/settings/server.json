@@ -1,0 +1,14 @@
+{
+  "host" : "127.0.0.1",
+  "port" : "8080",
+  "sslPort" : "443443",
+  "sslCert" : "",
+  "sslKey" : "",
+  "enableHTTP" : 1,
+  "enableHTTPS" : 0,
+  "logServer" : {
+    "enable" : 1,
+    "host" : "127.0.0.1",
+    "port" : "8888"
+  }
+}

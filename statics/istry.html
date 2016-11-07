@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Try Identity Server</title>
+    <script src='js/oidc-client.js'></script>
+</head>
+<body>
+    <button id="signin">SignIn</button>
+    <!--<button id="sigout">SignOut</button>-->
+    <script type="text/javascript">
+        document.getElementById('signin').addEventListener("click", signin, false);
+//        document.getElementById('sigout').addEventListener("click", signout, false);
+        // Client Token:
+        // F00B9522AD5C
+        // API url:
+        // http://doitwebapitest.azurewebsites.net/api/2.0
+
+        Oidc.Log.logger = console;
+        Oidc.Log.level = Oidc.Log.ERROR;
+
+        var settings = {
+            authority: 'https://accounts.doitprofiler.net/',
+            client_id: 'ClientAssessments',
+            redirect_uri: 'http://localhost:8080',
+            post_logout_redirect_uri: 'http://localhost:8080/istry.html',
+            response_type: 'id_token token',
+            scope: 'openid profile email roles',
+            acr_values: "clientCode:gauwec15stl",
+
+            filterProtocolClaims: true,
+            loadUserInfo: true
+        };
+        var client = new Oidc.OidcClient(settings);
+
+        function signin() {
+            client.createSigninRequest({ state: { bar: 15 } }).then(function(req) {
+                window.location = req.url;
+            }).catch(function(err) {
+                console.log(err);
+            });
+        }
+//        function signout() {
+//            client.createSignoutRequest({ id_token_hint: signinResponse && signinResponse.id_token, state: { foo: 5 } }).then(function(req) {
+//                window.location = req.url;
+//            });
+//        }
+//
+//        function processSignoutResponse() {
+//            client.processSignoutResponse().then(function(response) {
+//                signinResponse = null;
+//            }).catch(function(err) {
+//                console.log(err);
+//            });
+//        }
+    </script>
+</body>
+</html>
+
+
+/// https://github.com/IdentityModel/oidc-client-js/wiki

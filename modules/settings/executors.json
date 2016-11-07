@@ -1,0 +1,11 @@
+{
+  "executorsFolder" : "executors",
+  "executors" : {
+    "R" : {
+      "fileName" : "rExecutor.js",
+      "params" : {
+        "executePath" : ["..","..","db","tmpFiles"]
+      }
+    }
+  }
+}

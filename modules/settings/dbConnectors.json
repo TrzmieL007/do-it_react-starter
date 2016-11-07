@@ -1,0 +1,12 @@
+{
+  "mySQL" : {
+    "active" : 1,
+    "file" : "mySQL.js",
+    "params" : { }
+  },
+  "static" : {
+    "active" : 1,
+    "file" : "static.js",
+    "params" : { }
+  }
+}

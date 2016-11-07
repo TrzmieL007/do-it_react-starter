@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bar chart generator</title>
+    <script type="text/javascript" src="js/barChart.js"></script>
+    <style type="text/css">
+        #dropZone {
+            border: 3px dashed gray;
+            border-radius:8px;
+            width:100px;
+            height:100px;
+        }
+    </style>
+</head>
+<body>
+<button id="RandomTest" onClick="doRandomTest()">Gen random chart with random colors</button>&nbsp; &nbsp;
+<button id="MultipleTests" onClick="startsTests()">Run many tests</button>
+<button id="stopMultipleTests" onClick="stopTests()">Stop</button>
+<input type="number" id="freq" value="1" style="text-align: right;width:4em;" />s
+<br/><input type="checkbox" id="animatedGraphChkb" checked /><label id="animatedGraphLabel">Animate graph</label>
+<input type="number" placeholder="Animation time in ms" id="animatedGraphSpeed" style="width:128px;" min="0" step="1000" value="256"/>ms
+<div id="canvasNode"></div>
+<script type="text/javascript">
+    var workChart = new BarChart({
+        animate : true,
+        chartId : 'workchart'
+    });
+    var barChart = new BarChart({
+        animate : true,
+        animationLength: 256,
+        defaultHandleLongText : 'delete',
+        parentNode: document.getElementById('canvasNode'),
+        precision: 0
+    });
+    var interval;
+    function stopTests(){
+        clearInterval(interval);
+        document.getElementById('RandomTest').disabled = false;
+        document.getElementById('MultipleTests').disabled = false;
+        document.getElementById('freq').disabled = false;
+        document.getElementById('stopMultipleTests').disabled = true;
+    }
+    function startsTests(){
+        document.getElementById('RandomTest').disabled = true;
+        document.getElementById('MultipleTests').disabled = true;
+        document.getElementById('freq').disabled = true;
+        document.getElementById('stopMultipleTests').disabled = false;
+        interval = window.setInterval(doRandomTest,parseInt(Math.abs(parseFloat(document.getElementById('freq').value.replace(',','.')))*1000) || 128);
+    }
+    function doRandomTest(){
+        barChart.testRandomData((Math.random()*100)%100,(Math.random()*10 < 5));
+    }
+
+    function getRestColor(i){
+        var a = i+2;
+        a = a<<1;
+        a %= 16;
+        a = a.toString(16);
+        return a+a;
+    }
+    var calendar = [null,7,8,9,7,8,null];
+    var past = [0,10.25,9.12,8.2,8.1,4.32,0,0];
+    var days = [0,'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+    function getWorkThisWeek(){
+        var d = new Date();
+        var chart = [];
+        for(var i = 1; i < d.getDay(); ++i){
+            chart.push({value:past[i],label:days[i],color:i<6?'#3333'+getRestColor(i):i==6?'#999999':'#660000'});
+        }
+        chart.push({value:workedToday(),label:days[i],color:i<6?'#3333'+getRestColor(i):i==6?'#999999':'#660000'});
+        for(++i;i<8;++i)chart.push({value:0,label:days[i],color:i<6?'#3333'+getRestColor(i):i==6?'#999999':'#660000'});
+        workChart.drawChart({
+            data: chart,
+            title: "Peter worked this week",
+            xAxis: { label: 'Workdays' },
+            yAxis: { label: 'Hurs' }
+        });
+    }
+    function workedToday(){
+        var d = new Date();
+        var day = d.getDay();
+        if(calendar[day]){
+            var wtd = d.getHours() - calendar[day];
+            if(wtd >= 0)
+                return Math.min(Math.floor((wtd + (d.getMinutes()/60))*100)/100,past[day]);
+        }
+        return 0;
+    }
+    document.getElementById('animatedGraphChkb').onchange = function(e){
+        barChart.setAnimate(e.target.checked);
+        document.getElementById('animatedGraphSpeed').disabled = !e.target.checked;
+    };
+    var as = 256;
+    document.getElementById('animatedGraphSpeed').onchange = function(e){
+        var v = parseInt(e.target.value);
+        if(isNaN(v) || v < 0){
+            return e.target.value = as;
+        }
+        as = v;
+        barChart.setAnimationSpeed(v);
+    };
+    document.getElementById('animatedGraphLabel').onclick = function(e){
+        document.getElementById('animatedGraphChkb').click();
+    };
+    getWorkThisWeek();
+    workChart.setAnimate(false);
+    setInterval(getWorkThisWeek,30000);
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>R Scripts</title>
+    <link rel="stylesheet" href="/stylesheets/r.css" />
+    <script src='/js/jquery-3.1.0.min.js'></script>
+</head>
+<body>
+    <!--// FileName //-->
+    <pre>
+#! <!--// RScriptPath //--> --vanilla <!--// RScriptOptions //-->
+<!--// Script //-->
+## End
+    </pre>
+<!--// Buttons //-->
+    <script>
+        (function(){
+            var text = document.getElementById('ScriptContent');
+            if(text){
+                if(text.value)
+                    text.style.height = (text.value.split("\n").length*1.2)+'em';
+                else
+                    text.style.height = '1.2em';
+                text.onkeydown = function(event){
+                    if(event.which == 9){
+                        var carret = text.selectionStart;
+                        if(event.preventDefault) event.preventDefault();
+                        text.value = text.value.substr(0,carret)+'    '+text.value.substr(carret);
+                        text.selectionStart = text.selectionEnd = carret+4;
+                    }
+                };
+                text.addEventListener('keyup',function(event){
+                    if(event.srcElement == text && (event.which == 13 || event.which == 8 || event.which == 46)){
+                        text.style.height = (text.value.split("\n").length*1.2)+'em';
+                    }
+                });
+                text.onpaste = text.oncut = function(){
+                    setTimeout(function(){ text.style.height = (text.value.split("\n").length*1.2)+'em'; },32);
+                };
+                var genScript = document.getElementById('GenScript');
+                if(genScript){
+                    genScript.onclick = function(){
+                        var fileName = document.getElementById('RScriptName').value;
+                        if(!fileName){
+                            var tempName = document.getElementById('RScriptName').placeholder;
+                            var question = "You haven't specify name for the script file.\n"+
+                                    "Do you want to use automatically assigned temporary name: '"+tempName+"'?";
+                            if(window.confirm(question)){
+                                fileName = tempName;
+                            }else{
+                                return;
+                            }
+                        }
+                        $.ajax({
+                            url: window.location.origin + window.location.pathname,
+                            data: {
+                                fileName: fileName,
+                                options: document.getElementById('RScriptOptions').value,
+                                content: text.value
+                            },
+                            method: 'PUT'
+                        }).done(function(d){
+                            console.log(d);
+                            if(d.content.match(/^created file /))
+                                window.location.href = window.location.origin + '/R/rScriptsBrowser?file='+d.content.substr(d.content.lastIndexOf('/')+1);
+                        }).always(function(){
+                            console.info('Script sent');
+                        });
+                    }
+                }
+
+                var updScript = document.getElementById('UpdateScript');
+                if(updScript){
+                    updScript.onclick = function(){
+                        var fileName = document.getElementById('RScriptName').value;
+                        if(!fileName){
+                            var tempName = document.getElementById('RScriptName').placeholder;
+                            var question = "You haven't specify name for the script file.\n"+
+                                    "Do you want to use automatically assigned temporary name: '"+tempName+"'?";
+                            if(window.confirm(question)){
+                                fileName = tempName;
+                            }else{
+                                return;
+                            }
+                        }
+                        $.post(window.location.origin + window.location.pathname, {
+                                fileName: fileName,
+                                options: document.getElementById('RScriptOptions').value,
+                                content: text.value
+                            }
+                        ).done(function(d){
+                            if(d.content.match(/^updated file /))
+                                window.location.href = window.location.origin + '/R/rScriptsBrowser?file='+d.content.substr(d.content.lastIndexOf('/')+1);
+                        }).always(function(){
+                            console.info('Script sent');
+                        });
+                    }
+                }
+            }
+        })();
+    </script>
+</body>
+</html>

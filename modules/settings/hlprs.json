@@ -1,0 +1,13 @@
+{
+  "path" : ["helpers"],
+  "files" : {
+    "templates" : {
+      "fileName" : "templates.js",
+      "params" : {
+        "temPath" : ["..","templates"],
+        "tempPrefix" : "<!--// ",
+        "tempSufix" : " //-->"
+      }
+    }
+  }
+}

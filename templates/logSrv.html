@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Log Server</title>
+        <script src='/js/jquery-3.1.0.min.js'></script>
+        <style>
+            body {
+                background-color: black;
+                color: white;
+                font-family: monospace;
+                padding-bottom: 1.1em;
+            }
+            a { text-decoration:none; }
+            a:before {
+                content: "#";
+                padding-right: 4px
+            }
+            a, a:visited, #consolLine, .cmd { color: #00ff00; }
+            a:hover, a:active { color: #00cc00; }
+            ul {
+                list-style-type: none;
+                padding-left: 0;
+            }
+            #consolLine > span#line:after {
+                content: ' ';
+                width: 8px;
+                height: 1.2em;
+                display: inline-block;
+                background-color: #00ff00;
+                position: relative;
+                top: 0.2em;
+                animation: blink 1s infinite;
+            }
+
+            .fName {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: #000000;
+            }
+            .fName span {
+                background-color: #ffffff;
+                color: #000000;
+            }
+            .fName .placeholder {
+                width: 10px;
+                height: 3px;
+                display: inline-block;
+                background-color: #ffffff;
+                position: relative;
+                top: 3px;
+                animation: blink 1s infinite;
+            }
+            .scrollToTop, .scrollToEnd {
+                transition:512ms;
+                opacity:0;
+                width:2em;
+                height:2em;
+                border-radius:4px;
+                background:#ffffff;
+                bottom:1em;
+                right:1em;
+                position:absolute;
+                text-align:center;
+                cursor:pointer;
+            }
+            .scrollToTop:after, .scrollToEnd:after {
+                content:' ';
+                width:0;
+                height:0;
+                border:8px solid transparent;
+                border-bottom-color:#000000;
+                line-height:.6em;
+            }
+            .scrollToTop:before, .scrollToEnd:before {
+                content:' ';
+                width: 16px;
+                height: 3px;
+                background-color: #000000;
+                position: absolute;
+                top: 6px;
+            }
+            .scrollToEnd {
+                right: 4em;
+                transform: rotate(180deg);
+                -moz-transform: rotate(180deg);
+                -webkit-transform: rotate(180deg);
+                -ms-transform: rotate(180deg);
+                opacity: 0.5;
+            }
+            .wrap-words { word-wrap: break-word; }
+            @keyframes blink {
+                0% { opacity: 1; }
+                1% { opacity: 0; }
+                49% { opacity: 0; }
+                50% { opacity: 1; }
+            }
+            .c30m { color: #000000; }
+            .c31m { color: #ff0000; }
+            .c32m { color: #00ff00; }
+            .c33m { color: #ffff00; }
+            .c34m { color: #0000ff; }
+            .c35m { color: #ff00ff; }
+            .c36m { color: #00ffff; }
+            .c37m { color: #ffffff; }
+        </style>
+        <script>
+            $(function(){
+                $('#consolLine').hide();
+                $(document).scroll(function(){
+                    if($(this).scrollTop()>303)
+                        $('.scrollToTop').css('opacity',0.5);
+                    else
+                        $('.scrollToTop').css('opacity',0);
+                    if($(this).scrollTop()<(document.body.offsetHeight-window.innerHeight))
+                        $('.scrollToEnd').css('opacity',0.5);
+                    else
+                        $('.scrollToEnd').css('opacity',0);
+                });
+                var consoleLine = {
+                    line : $('#consolLine #line')[0],
+                    history : $('#consolLine > #history')[0],
+                    numberChars : [')','!','@','#','$','%','^','&','*','('],
+                    caps: false,
+                    active: false,
+                    lastTab: 0,
+                    filesList: [],
+                    getFileList: function(){
+                        if(this.filesList.length) return this.filesList;
+                        $.ajax({
+                            method: 'POST',
+                            async: false,
+                            url: window.location.origin + '/ls -L',
+                        }).done(function(data){
+                            if(data.result.fileList) this.filesList = data.result.fileList;
+                        }.bind(this));
+                        return this.filesList;
+                    },
+                    commandHistory: { pos: 0, command: [], commandBuffor: '' }
+                };
+                document.addEventListener('keydown',function(event){
+                    if(consoleLine.active){
+                        if(event.keyCode == 27){  // ESC
+                            $('#consolLine').hide();
+                            $('#result').show();
+                            return consoleLine.active = false;
+                        }
+                        if(event.keyCode == 9){
+                            var phrase = $(consoleLine.line).text().split(' ');
+                            phrase = phrase[phrase.length - 1];
+                            if(event.preventDefault) event.preventDefault();
+                            var list = consoleLine.getFileList().reduce(function(p,f){
+                                if(f.startsWith(phrase)) p.push(f);
+                                return p;
+                            },[]);
+                            if(list.length == 0) return;
+                            if(list.length == 1){
+                                var r = $(consoleLine.line).text().split(' ');
+                                r[r.length - 1] = list[0];
+                                return $(consoleLine.line).text(r.join(' '));
+                            }
+                            while(list.every(function(file){ return file.startsWith(phrase); })){
+                                phrase += list[0].charAt(phrase.length);
+                            }
+                            var args = $(consoleLine.line).text().split(' ');
+                            args[args.length - 1] = phrase.substr(0,phrase.length-1);
+                            $(consoleLine.line).text(args.join(' '));
+                            if(list.length > 1 && event.timeStamp - consoleLine.lastTab < 1024){
+                                $(consoleLine.history).append('<div><nobr>'+list.join("</nobr> &nbsp; <nobr>")+'</nobr></div>');
+                            }
+                            return consoleLine.lastTab = event.timeStamp;
+                        }
+                        if(event.keyCode == 13){  // Enter
+                            var command = $(consoleLine.line).text();
+                            consoleLine.commandHistory.command.push(command);
+                            consoleLine.commandHistory.pos = consoleLine.commandHistory.command.length;
+                            consoleLine.commandHistory.commandBuffor = '';
+                            switch(command) {
+                                case "clear":
+                                    $(consoleLine.line).text('');
+                                    return $(consoleLine.history).html('');
+                                default:
+                                    if(command.startsWith('rm')){
+                                        consoleLine.filesList = [];
+                                    }
+                                    return $.post(window.location.origin + '/' + command)
+                                            .done(function (data) {
+                                                if(data.result.redirect) return window.location = window.location.origin + '/' + data.result.redirect;
+                                                if(data.result.fileList) return consoleLine.filesList = data.result.fileList;
+                                                if(command.startsWith('ls -R')){
+                                                    return $('#filesList').html(data.result);
+                                                }
+                                                var result = 'LogServer:logs root# ' + command + "<br/>" + (typeof data.result === 'object' ? JSON.stringify(data.result) : data.result);
+                                                $(consoleLine.history).append('<div>' + result + '</div>');
+                                            })
+                                            .fail(function () {
+                                                $(consoleLine.history).append("<div>connect to host " + window.location.hostname + " port " + window.location.port + ": Connection refused</div>");
+                                            })
+                                            .always(function () {
+                                                $(consoleLine.line).text('');
+                                            });
+                            }
+                        }
+                        if(event.keyCode == 38){
+                            if(consoleLine.commandHistory.pos == consoleLine.commandHistory.command.length)
+                                consoleLine.commandHistory.commandBuffor = $(consoleLine.line).text();
+                            if(consoleLine.commandHistory.pos > 0)
+                                $(consoleLine.line).text(consoleLine.commandHistory.command[--consoleLine.commandHistory.pos]);
+                            return;
+                        }
+                        if(event.keyCode == 40){
+                            if(consoleLine.commandHistory.pos < consoleLine.commandHistory.command.length)
+                                $(consoleLine.line).text(consoleLine.commandHistory.command[++consoleLine.commandHistory.pos]);
+                            if(consoleLine.commandHistory.pos == consoleLine.commandHistory.command.length)
+                                $(consoleLine.line).text(consoleLine.commandHistory.commandBuffor);
+                            return;
+                        }
+                        if(event.keyCode >= 48 && event.keyCode <= 57){
+                            return $(consoleLine.line).text($(consoleLine.line).text()+(event.shiftKey ? consoleLine.numberChars[event.keyCode - 48] : event.keyCode - 48));
+                        }
+                        if(event.keyCode >= 65 && event.keyCode <= 90){
+                            return $(consoleLine.line).text($(consoleLine.line).text()+(event.shiftKey || consoleLine.caps ? String.fromCharCode(event.keyCode) : String.fromCharCode(event.keyCode+32)));
+                        }
+                        switch(event.keyCode){
+                            case 8: return $(consoleLine.line).text($(consoleLine.line).text().substr(0,$(consoleLine.line).text().length-1));
+                            case 20: return consoleLine.caps = !consoleLine.caps;
+                            case 32: return $(consoleLine.line).text($(consoleLine.line).text()+' ');
+                            case 186: return $(consoleLine.line).text($(consoleLine.line).text()+(event.shiftKey ? ':' : ';'));
+                            case 187: return $(consoleLine.line).text($(consoleLine.line).text()+(event.shiftKey ? '+' : '='));
+                            case 188: return $(consoleLine.line).text($(consoleLine.line).text()+(event.shiftKey ? '<' : ','));
+                            case 189: return $(consoleLine.line).text($(consoleLine.line).text()+(event.shiftKey ? '_' : '-'));
+                            case 190: return $(consoleLine.line).text($(consoleLine.line).text()+(event.shiftKey ? '>' : '.'));
+                            case 191: return $(consoleLine.line).text($(consoleLine.line).text()+(event.shiftKey ? '?' : '/'));
+                            case 192: return $(consoleLine.line).text($(consoleLine.line).text()+(event.shiftKey ? '~' : '`'));
+                            case 219: return $(consoleLine.line).text($(consoleLine.line).text()+(event.shiftKey ? '{' : '['));
+                            case 220: return $(consoleLine.line).text($(consoleLine.line).text()+(event.shiftKey ? '|' : '\\'));
+                            case 221: return $(consoleLine.line).text($(consoleLine.line).text()+(event.shiftKey ? '}' : '}'));
+                            case 222: return $(consoleLine.line).text($(consoleLine.line).text()+(event.shiftKey ? '"' : "'"));
+                        }
+                    }else{
+                        if(event.keyCode == 73){  // i
+                            $('#consolLine').show();
+                            $('#result').hide();
+                            return consoleLine.active = true;
+                        }
+                    }
+                });
+            })
+        </script>
+    </head>
+    <body>
+        <ul id="filesList">
+<!--// FileList //-->
+        </ul>
+        <ul>
+            <li><a href='/'>clear</a></li>
+        </ul>
+        <div id="result">
+<!--// Result //-->
+        </div>
+        <div id="consolLine"><div id="history"></div>LogServer:logs root# <span id="line"></span></div>
+    </body>
+</html>

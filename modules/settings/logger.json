@@ -1,0 +1,14 @@
+{
+  "enabled" : 1,
+  "fileLevel" : "info",
+  "consoleLevel" : "debug",
+  "filename" : "allLogs_",
+  "datePattern" : "yyyy-MM-dd.log",
+  "consoleErrors" : true,
+  "exceptionFileName" : "exceptions_",
+  "mySQL": {
+    "enabled" : 1,
+    "filename" : "mySQL_",
+    "datePattern" : "yyyy-MM-dd.log"
+  }
+}

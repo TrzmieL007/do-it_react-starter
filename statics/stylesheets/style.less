@@ -1,0 +1,49 @@
+body {
+
+}
+.loadAjax {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 2px;
+  background: #00b400;
+  transition: 256ms;
+  z-index: 16;
+  box-shadow: 0 0 2px #006400;
+  &.prepare {
+    animation: blink 3s 12s infinite, preparation 20s linear forwards;
+  }
+  &.always {
+    animation: disappear 2s forwards;
+  }
+  &.error {
+    background: red;
+    box-shadow: 0 0 2px #640000;
+  }
+}
+
+@-webkit-keyframes disappear {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-moz-keyframes disappear {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes disappear {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
