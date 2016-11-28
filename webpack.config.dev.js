@@ -30,16 +30,11 @@ module.exports = {
             {
                 test: /\.scss$/,
                 exclude: /[\/\\](node_modules|bower_components|public)[\/\\]/,
-                loaders: [
-                    'style?sourceMap',
-                    'css?modules&importLoaders=1&localIdentName=[path]___[name]__[local]___[hash:base64:5]',
-                    'postcss',
-                    'sass'
-                ]
+                loaders: ['style?sourceMap', 'css?'+/*minimize&*/'localIdentName=[name]_[local]_[hash:base64:4]', 'postcss', 'sass']
             },
             {
                 test: /\.less$/,
-                loaders: ["style", "css", "less"]
+                loaders: ["style", "css?minimize", 'postcss', "less"]
             },
             {
                 test: /\.css$/,

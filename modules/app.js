@@ -6,11 +6,13 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var winston = require('winston-request-logger');
 var path = require('path');
+var compression = require('compression');
 
 module.exports = function(appConfig,logger){
     var config = appConfig.get('app');
     var app = express();
 
+    app.use(compression());
     // app.use(express.favicon(config.favicon));
     app.use('/', express.static(path.join(__dirname, '..', config.staticFiles)));
     app.use(winston.create(logger));

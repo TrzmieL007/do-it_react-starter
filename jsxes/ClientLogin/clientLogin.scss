@@ -1,0 +1,186 @@
+@import '../ScssStyles/variables.scss';
+
+*, :after, :before {
+  box-sizing: border-box;
+}
+
+.clientLogin {
+  position: relative;
+  display: block;
+}
+
+form:local(.form-login) {
+  max-width: 400px;
+  padding: 40px;
+  margin: 50px auto;
+  background-color: #f5f5f5;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+  border: 1px solid #ddd;
+  position: relative;
+  animation-name: drop;
+  animation-duration: 512ms;
+  h2 {
+    font-size: 30px;
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-weight: 500;
+    line-height: 33px;
+  }
+  #errorMessage {
+    border: 1px solid #ebccd1;
+    color: #a94442;
+    background-color: #f2dede;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    position: relative;
+    &:empty { display: none; }
+    a {
+      color: #a94442;
+      float: right;
+      width: 1em;
+      text-align: center;
+    }
+  }
+  input {
+    margin-bottom: -1px;
+    border-radius: 4px;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+    padding: 10px;
+    font-size: 16px;
+    display: block;
+    width: 100%;
+    color: #555;
+    background-color: $white;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+    transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+    &:focus {
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);
+      border-color: #66afe9;
+    }
+    &.input-validation-error {
+      border: 1px solid #b94a48;
+    }
+  }
+  button {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 18px;
+    line-height: 1.3333333;
+    border-radius: 6px;
+    color: $white;
+    background-color: #337ab7;
+    border-color: #2e6da4;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    overflow: visible;
+  }
+}
+
+header {
+  border: 0 solid $borderColor;
+  border-bottom-width: 1px;
+  box-shadow: rgba(255, 255, 255, 0.0980392) 0 1px 0 0;
+  color: $white;
+  display: block;
+  height: 50px;
+  margin-bottom: 20px;
+  min-height: 50px;
+  position: relative;
+  width: 100%;
+  z-index: 1000;
+  .navbar-header {
+    margin-right: -15px;
+    margin-left: -15px;
+    a {
+      font-size: 20px;
+      text-shadow: none;
+      font-weight: 200;
+      height: 40px;
+      vertical-align: middle;
+      padding: 15px 15px;
+      line-height: 20px;
+      display: block;
+      img {
+        vertical-align: middle;
+        border: 0;
+      }
+    }
+  }
+}
+
+.primary-colour-bg {
+  background-color: $primaryColor;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #ffffe1;
+  color: $textColor;
+  font-family: $fontFamily;
+  font-size: $fontSize;
+  line-height: 20px;
+  padding-bottom: 40px;
+}
+
+.container {
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto
+}
+
+.clear-fix:after {
+  content: ".";
+  clear: both;
+  display: block;
+  height: 0;
+  visibility: hidden;
+}
+
+hr {
+  border-top: 1px solid rgb(0, 0, 102);
+  box-sizing: content-box;
+}
+
+footer {
+  text-align: center;
+  height: auto;
+  padding: 10px 0;
+  clear: both;
+  font-size: .8em;
+}
+
+#body {
+  min-height: 303px;
+  clear: both;
+  position: relative;
+  display: block;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+a {
+  color: #337ab7;
+  text-decoration: none
+}
+
+@keyframes drop {
+  from { top: -333px; }
+  to { top: 0; }
+}

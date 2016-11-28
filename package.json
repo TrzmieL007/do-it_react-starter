@@ -23,6 +23,7 @@
   "dependencies": {
     "body-parser": "^1.15.2",
     "cluster": "^0.7.7",
+    "compression": "^1.6.2",
     "connect-busboy": "0.0.2",
     "cookie-parser": "^1.4.3",
     "crypto-js": "^3.1.6",
@@ -31,12 +32,16 @@
     "express-useragent": "^0.2.4",
     "morgan": "^1.7.0",
     "mysql": "^2.11.1",
+    "react-css-modules": "^3.7.10",
     "winston": "^2.2.0",
     "winston-daily-rotate-file": "^1.3.0",
     "winston-request-logger": "^1.0.7",
     "ws": "^1.1.1"
   },
   "devDependencies": {
+    "alt": "^0.18.6",
+    "alt-container": "^1.0.2",
+    "alt-utils": "^1.0.0",
     "babel-core": "^6.18.2",
     "babel-loader": "^6.2.7",
     "babel-plugin-transform-class-properties": "^6.18.0",
@@ -52,6 +57,7 @@
     "node-sass": "^3.11.2",
     "postcss-loader": "^1.1.0",
     "react": "^15.3.2",
+    "react-addons-perf": "^15.4.0",
     "react-dom": "^15.3.2",
     "react-redux": "^4.4.5",
     "react-router": "^3.0.0",
@@ -60,6 +66,7 @@
     "redux": "^3.6.0",
     "sass-loader": "^4.0.2",
     "style-loader": "^0.13.1",
+    "uuid": "^3.0.0",
     "webpack": "^1.13.3",
     "zombie": "^4.2.1"
   }

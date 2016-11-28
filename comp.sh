@@ -27,7 +27,7 @@ else
     if [ $GR -ne 0 ]; then
         finished
         echo -e "\033[42m \033[37m\033[1mSuccess! \033[0m\033[47m \033[32mOperation finished successfully! \033[0m"
-        npm start
+        #npm start
     else
         echo ""
         finished

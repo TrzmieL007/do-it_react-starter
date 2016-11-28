@@ -1,7 +1,6 @@
 import React from 'react';
 import { render } from "react-dom";
-import LoginPage from './LoginPage/loginPage';
-
+import ClientLogin from './ClientLogin/clientLogin';
 
 var oidSettings = {
     authority: 'https://accounts.doitprofiler.net/',
@@ -61,32 +60,43 @@ checkLogin().then(function(){
 },function(){
     checkLogout();
     drawUI(0);
-    render(<LoginPage handleLogin={ev=>{
-        if(ev && ev.preventDefault) ev.preventDefault();
-        var clientCode = ev&&ev.target?ev.target[0].value:document.getElementById('clientCodeInput').value;
-        if(document.getElementById('errorLabel')){
-            document.getElementById('errorLabel').innerHTML = "";
-        }
-        window.client.settings._acr_values = "clientCode:"+clientCode;
-        window.client.createSigninRequest({ state: { foo: 'bar_'+(+(new Date())) } }).then(function(req) {
-            window.location = req.url;
-        }).catch(function(err){
-            console.log(err);
-        });
-    }} />,document.getElementById('ContentHolder'));
+    render(
+        <ClientLogin handleLogin={ev=>{
+            if(ev && ev.preventDefault) ev.preventDefault();
+            document.querySelector('form.form-login input').disabled = document.querySelector('form.form-login button').disabled = true;
+            let clientCode = document.getElementById('ClientCode').value;
+            if(!clientCode){
+                ClientLogin.fillError("You have to supply Client Code to proceede");
+                return document.querySelector('form.form-login input').disabled = document.querySelector('form.form-login button').disabled = false;
+            }
+            if(document.getElementById('errorLabel')){
+                ClientLogin.fillError("");
+            }
+            window.client.settings._acr_values = "clientCode:"+clientCode;
+            window.client.createSigninRequest({ state: { foo: 'bar_'+(+(new Date())) } }).then(function(req) {
+                localStorage.setItem('clientCode', encodeURIComponent(clientCode));
+                window.location = req.url;
+            }).catch(function(err){
+                localStorage.removeItem('clientCode');
+                ClientLogin.fillError(JSON.stringify(err));
+                document.querySelector('form.form-login input').disabled = document.querySelector('form.form-login button').disabled = false;
+            });
+        }} />,
+        document.getElementById('ContentHolder')
+    );
  });
 
 function drawUI(doShow){
     require.ensure(['./UI/ui.jsx'],function(){
-        let createStore = require('redux').createStore;
-        let Provider = require('react-redux').Provider;
+        // let createStore = require('redux').createStore;
+        let Provider = require('./FluxImpl/Provider/ProviderDebug');
         let UI = require('./UI/ui.jsx');
-        let reducers = require('./Store/reducers.js');
-        const store = createStore(reducers);
+        // let reducers = require('./Store/reducers.js');
+        // const store = createStore(reducers);
 
         if(doShow){
             render((
-                <Provider store={store}>
+                <Provider>
                     <UI />
                 </Provider>
             ), document.getElementById('ContentHolder'));

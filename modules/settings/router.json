@@ -11,6 +11,12 @@
         "rBinPath": "/usr/local/bin/",
         "dbPath" : ["R","Scripts"]
       }
+    },
+    "doItAPI" : {
+      "file" : "doItAPI.js",
+      "params" : {
+        "dbPath" : ["DoItWeb"]
+      }
     }
   }
 }

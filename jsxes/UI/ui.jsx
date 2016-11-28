@@ -1,66 +1,70 @@
 import './ui.scss';
-import React, { Component } from 'react';
-import $ from '../../statics/js/ajax';
+import React from 'react';
+// import $ from '../../statics/js/ajax';
 
-import Main from '../Main/main';
-import TEMP_1 from '../TEMP_1/temp_1';
-import TEMP_2 from '../TEMP_2/temp_2';
-import { Router, Route, hashHistory } from 'react-router'
+import PopupWindow from '../PopupWindow/popupWindow';
+import hashHistory from 'react-router/lib/hashHistory';
+import Router from 'react-router/lib/Router';
+import Navigation from '../NavigationTree';
 
-class UI extends Component {
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as AppStoreActions from '../FluxImpl/appStoreActions';
+import * as WindowsActions from '../FluxImpl/windowsStoreActions';
+
+class UI extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {};
+        this.routes = Navigation.routes;
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(){}
 
-    }
-
-    signout(){
-       window.client.createSignoutRequest({ id_token_hint: window.signinResponse && window.signinResponse.id_token, state: { foo: 'bar' } }).then(function(req) {
-           localStorage.removeItem('expires_at');
-           localStorage.removeItem('profile');
-           localStorage.removeItem('id_token');
-           localStorage.removeItem('access_token');
-           window.location = req.url;
-       });
-    }
-
-    sendTestRequestWithA() {
-        $.ajax({
-                url: 'http://doitwebapitest.azurewebsites.net/api/2.0/Test/',
-                data: { token : 'F00B9522AD5C' }, // pda16mag
-                done: result => {
-                        console.log(result);
-                    },
-                fail: $.fail,
-                always: (response,status) => {
-                    console.group('always');
-                    console.log(response);
-                    console.log(status);
-                    console.groupEnd();
-                },
-                authenticate: true
-            });
+    componentWillReceiveProps(nextProps){
+        if(this.props.wctime != nextProps.wctime) this.forceUpdate();
     }
 
     render() {
+        let actions = Object.assign({},
+            bindActionCreators(AppStoreActions, this.props.dispatch),
+            bindActionCreators(WindowsActions, this.props.dispatch)
+        );
+        var windowses = this.props.windows.reduce((p,w) => {
+            p.push(<PopupWindow id={w.id} name={w.title} content={w.content} key={w.id} actions={actions} type="modal" />);
+            return p;
+        },[]);
+
         return (
             <div className="UI">
-                <button onClick={this.signout} style={{textAlign:'right'}}>Signout</button><p/>
-                <Router history={hashHistory}>
-                    <Route path="/" component={Main}/>
-                    <Route path="/tmp1" component={TEMP_1}/>
-                    <Route path="/tmp2" component={TEMP_2}/>
-                </Router>
-                <button onClick={this.sendTestRequestWithA}>Send test request to api with authentication header</button>
+                {/*<button onClick={this.openWindow.bind(this)}>add window</button><br/>
+                <button onClick={this.closeWindow.bind(this)}>close last window</button><br/>
+                <button onClick={this.closeAllWindows.bind(this)}>close all windows</button><br/>*/}
+
+                {windowses}
+                <Router
+                    history={hashHistory}
+                    routes={this.routes}
+                    createElement={(Component, props) => <Component {...props} {...this.props} actions={actions}>{props.children}</Component>}
+                />
             </div>
         );
     }
+    openWindow(){
+        this.props.dispatch(WindowsActions.openWindow(winid++, 'window '+winid, 'content of the window '+winid+' :)'));
+        setTimeout(() => this.props.dispatch(WindowsActions.updateWindow(winid-1,"Updated window",<div>I have just updated this window with setTimeout function :D.<br/>Thanks for watching dude :D</div>)), 2000);
+    }
+    closeWindow(){
+        this.props.dispatch(WindowsActions.closeWindow(--winid));
+    }
+    closeAllWindows(){
+        this.props.dispatch(WindowsActions.closeAllWindows());
+    }
 }
+var winid = 0;
 
-UI.propTypes = {
-
-};
-
-module.exports = UI;
+module.exports = connect(state => ({
+    appState : state.appState,
+    windows : state.windowsState.windows,
+    wctime : state.windowsState.wctime
+}))(UI);
