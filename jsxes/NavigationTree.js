@@ -84,6 +84,7 @@ export default {
                     {
                         path: '/Home',
                         component: require('./Views/Home/module'),
+                        indexRoute: {onEnter: (nextState, replace) => replace('/Home/overview')},
                         childRoutes: [
                             {
                                 path: '/Home/:id',

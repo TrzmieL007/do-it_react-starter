@@ -11,11 +11,15 @@ class SideMenu extends React.Component {
         super(props);
         this.state = { listOfModules : [] };
         this.getListOfModules();
+        this.client = common.getClientData();
+    }
+    componentWillReceiveProps(props){
+        if(this.props.params.id !== props.params.id){
+            this.forceUpdate();
+        }
     }
     shouldComponentUpdate(nextProps, nextState){
-        let should = this.props.params.id !== nextProps.params.id || common.compareObj(this.state.listOfModules, nextState.listOfModules);
-        console.log("should component update: %o",should);
-        return should;
+        return this.props.params.id !== nextProps.params.id || !common.compareObj(this.state.listOfModules, nextState.listOfModules);
     }
 
     getListOfModules(){
@@ -33,13 +37,12 @@ class SideMenu extends React.Component {
         </li>);
         return (<div className="sideMenu col-sm-4 col-md-4 col-lg-3">
             {/* If there is a logo */}
-            <div className="panel panel-default" style={{padding: "15px 0 20px 0", marginBottom:-8}}>
+            {this.client.image ? <div className="panel panel-default" style={{padding: "15px 0 20px 0", marginBottom:-8}}>
                 <div className="text-center">
-                    <img src="" alt="Dyslexia+ Logo" />
+                    <img src={this.client.image} alt={this.client.name+" Logo"} />
                 </div>
-            </div>
-            {/* End of if logo */}
-            <ul className="nav nav-list sidebar-nav " id="navtabs" style={{marginBottom:8}}>
+            </div> : null}
+            <ul className="nav nav-list sidebar-nav" id="navtabs" style={{marginBottom:8}}>
                 {links}
             </ul>
 

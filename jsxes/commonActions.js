@@ -1,6 +1,7 @@
 /**
  * Created by trzmiel007 on 25/11/16.
  */
+var translator = require('./localize');
 
 export default class CommonActions {
     /**
@@ -37,6 +38,8 @@ export default class CommonActions {
         let fields = arguments.length ? Array.prototype.slice.call(arguments) : ["email"];
         let userDataObj = {};
         fields.forEach(f => userDataObj[f] = userData[f]);
+        // TODO: remove this mock
+        userDataObj.language = 'en';
         return userDataObj;
     }
 
@@ -47,7 +50,7 @@ export default class CommonActions {
      * @returns {{clientCode: string}}
      */
     static getClientData(){
-        let fields = arguments.length ? Array.prototype.slice.call(arguments) : ["image"];
+        let fields = arguments.length ? Array.prototype.slice.call(arguments) : ["image","name"];
         let clientData = { clientCode: decodeURIComponent(localStorage.getItem('clientCode')) };
         fields.forEach(f => clientData[f] = this.getClientProperty(f,/*this param to be removed if not needed anymore*/clientData.clientCode));
         return clientData;
@@ -63,6 +66,7 @@ export default class CommonActions {
         switch(name){
             // TODO: replace this hardcoded mock!
             case 'image': return cc.toLowerCase() == 'dyslexia+' ? 'https://doitcdn.azureedge.net/shared/images/thumbs/0001067_200_150.jpeg' : null;
+            case 'name': return cc.replace(/\b\w/g, l => l.toUpperCase());
             default: return null;
         }
     }
@@ -74,8 +78,13 @@ export default class CommonActions {
      * @returns {boolean}
      */
     static compareObj(o1, o2){
+        if(o1 == null || o2 == null) return o1 == o2;
         if(Object.keys(o1).length != Object.keys(o2).length) return false;
-        return Object.keys(o1).every(k => typeof o1[k] == typeof o2[k] && ((typeof o1[k] == 'object' && compareObj(o1[k],o2[k])) || o1[k] === o2[k]));
+        return Object.keys(o1).every(k => typeof o1[k] == typeof o2[k] && ((typeof o1[k] == 'object' && this.compareObj(o1[k],o2[k])) || o1[k] === o2[k]));
+    }
+
+    static localiseString(key,lang){
+        return translator.toLocaleString(key,lang);
     }
 
     /*sendTestRequestWithA() {

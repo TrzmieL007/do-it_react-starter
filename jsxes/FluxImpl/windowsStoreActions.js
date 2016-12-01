@@ -14,12 +14,14 @@ export const UPDATE_WINDOW = "UPDATE_WINDOW";
  * the id will be assigned automatically by <code>uuid.v4()</code>, and you will be able to get it out by grabbing<br/>
  * <code>id</code> property out of object returned by <code>props.actions.openWindow</code> function (this function).
  * @param id
- * @param title
+ * @param name - window title
  * @param content
- * @returns {{type: string, id: *, title: *, content: *}}
+ * @param windowType
+ * @param props
+ * @returns {{type: string, id: *, props: object}}
  */
-export function openWindow(id, title, content){
-    return { type : OPEN_WINDOW, id: id || uuid.v4(), title, content };
+export function openWindow(id, name, content, windowType = '', props){
+    return { type : OPEN_WINDOW, id: id || uuid.v4(), props : Object.assign(props||{},{ name, content, windowType }) };
 }
 /**
  * Closes the window with matched <code>id</code>.
@@ -39,10 +41,12 @@ export function closeAllWindows(){
 /**
  * Updates window that matches <code>id</code>.
  * @param id
- * @param title
+ * @param name - window title
  * @param content
+ * @param windowType
+ * @param props
  * @returns {{type: string, id: *, title: *, content: *}}
  */
-export function updateWindow(id, title, content){
-    return { type : UPDATE_WINDOW, id, title, content };
+export function updateWindow(id, name, content, windowType = '', props){
+    return { type : UPDATE_WINDOW, id, props : Object.assign(props||{},{ name, content, windowType }) };
 }

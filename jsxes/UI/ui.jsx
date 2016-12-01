@@ -22,6 +22,8 @@ class UI extends React.Component {
     componentDidUpdate(){}
 
     componentWillReceiveProps(nextProps){
+        if(this.props.appState.theme != nextProps.appState.theme)
+            document.getElementById('frontend-theme-stylesheet').href = "/Content/frontend-themes/theme-"+nextProps.appState.theme+".min.css";
         if(this.props.wctime != nextProps.wctime) this.forceUpdate();
     }
 
@@ -31,12 +33,12 @@ class UI extends React.Component {
             bindActionCreators(WindowsActions, this.props.dispatch)
         );
         var windowses = this.props.windows.reduce((p,w) => {
-            p.push(<PopupWindow id={w.id} name={w.title} content={w.content} key={w.id} actions={actions} type="modal" />);
+            p.push(<PopupWindow id={w.id} key={w.id} actions={actions} {...w.props} />); // type={w.windowType||""} name={w.title} content={w.content}
             return p;
         },[]);
 
         return (
-            <div className="UI">
+            <div className={"UI "+this.props.appState.theme}>
                 {/*<button onClick={this.openWindow.bind(this)}>add window</button><br/>
                 <button onClick={this.closeWindow.bind(this)}>close last window</button><br/>
                 <button onClick={this.closeAllWindows.bind(this)}>close all windows</button><br/>*/}
@@ -66,5 +68,6 @@ var winid = 0;
 module.exports = connect(state => ({
     appState : state.appState,
     windows : state.windowsState.windows,
-    wctime : state.windowsState.wctime
+    wctime : state.windowsState.wctime,
+    locale : new (require('../localize'))('pl')
 }))(UI);

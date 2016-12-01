@@ -9,7 +9,8 @@ import common from '../commonActions';
 
 const initialAppState = {
     client: common.getClientData(),
-    user: common.getUserData('email','name')
+    user: common.getUserData('email','name'),
+    theme: "default"
 };
 const dfltAction = { type : null };
 
@@ -20,8 +21,7 @@ function windowsState(state = { windows : [] }, action = dfltAction){
             return Object.assign(obj, {
                 windows: [{
                     id: action.id,
-                    title: action.title,
-                    content: action.content
+                    props: action.props
                 }].concat(state.windows)
             });
         case Ws.CLOSE_WINDOW:
@@ -30,8 +30,7 @@ function windowsState(state = { windows : [] }, action = dfltAction){
             return Object.assign(obj, {
                 windows : state.windows.map(w => w.id == action.id ? {
                     id: action.id,
-                    title: action.title,
-                    content: action.content
+                    props: action.props
                 } : w)
             });
         case Ws.CLOSE_ALL_WINDOWS:
@@ -45,6 +44,8 @@ function appState(state = initialAppState, action = dfltAction){
     switch(action.type){
         case As.CHANGE_CLIENT_CODE:
             return Object.assign({}, state, { clientCode : action.clientCode });
+        case As.CHANGE_THEME:
+            return Object.assign({}, state, { theme : action.theme });
         default:
             return state;
     }

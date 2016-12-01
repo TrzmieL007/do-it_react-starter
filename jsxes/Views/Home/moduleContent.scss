@@ -1,0 +1,42 @@
+:local(.content) {
+  h2.page-header {
+    margin-top: 0;
+  }
+  ul.module-icons.thumbnails {
+    list-style: none;
+    padding: 0;
+    li {
+      float: left;
+      margin-left: 20px;
+    }
+  }
+  .module-icon {
+    text-align: center;
+    cursor: pointer;
+    height: 200px;
+    width: 140px;
+    padding: 5px;
+    .module-icon-image {
+      position: relative;
+      width: 130px;
+      height: 130px;
+      background-color: #003175;
+      border-radius: 50%;
+      margin: 0;
+      i {
+        position: absolute;
+        top: 0;
+        left: 0;
+        line-height: 130px;
+        height: 130px;
+        width: 130px;
+        color: #fff;
+      }
+    }
+    .module-icon-text {
+      color: #000;
+      font-weight: bold;
+      padding: 5px 0;
+    }
+  }
+}
