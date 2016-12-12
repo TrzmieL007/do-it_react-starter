@@ -1,7 +1,7 @@
 /**
  * Created by trzmiel007 on 25/11/16.
  */
-var translator = require('./localize');
+let translator = require('./localize');
 
 export default class CommonActions {
     /**
@@ -86,6 +86,8 @@ export default class CommonActions {
     static localiseString(key,lang){
         return translator.toLocaleString(key,lang);
     }
+
+    static getSourceURL(){ return /*"https://doitprofiler.net/"*/"https://doitcdn.azureedge.net/shared/"; }
 
     /*sendTestRequestWithA() {
         $.ajax({

@@ -11,15 +11,20 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as AppStoreActions from '../FluxImpl/appStoreActions';
 import * as WindowsActions from '../FluxImpl/windowsStoreActions';
+import $ from '../../statics/js/ajax';
+import { Storage } from '../Utils/utils';
 
 class UI extends React.Component {
     constructor(props) {
         super(props);
         this.state = {};
         this.routes = Navigation.routes;
+        $.get('http://localhost:8080/doItAPI/assessments', {
+            clientCode: props.appState.client.clientCode.toLowerCase()
+        },res => {
+            Object.keys(res).forEach(c => Storage.setItem('assId_'+c,res[c]));
+        });
     }
-
-    componentDidUpdate(){}
 
     componentWillReceiveProps(nextProps){
         if(this.props.appState.theme != nextProps.appState.theme)
@@ -32,17 +37,12 @@ class UI extends React.Component {
             bindActionCreators(AppStoreActions, this.props.dispatch),
             bindActionCreators(WindowsActions, this.props.dispatch)
         );
-        var windowses = this.props.windows.reduce((p,w) => {
-            p.push(<PopupWindow id={w.id} key={w.id} actions={actions} {...w.props} />); // type={w.windowType||""} name={w.title} content={w.content}
+        let windowses = this.props.windows.reduce((p,w) => {
+            p.push(<PopupWindow id={w.id} key={w.id} actions={actions} {...w.props} />);
             return p;
         },[]);
-
         return (
             <div className={"UI "+this.props.appState.theme}>
-                {/*<button onClick={this.openWindow.bind(this)}>add window</button><br/>
-                <button onClick={this.closeWindow.bind(this)}>close last window</button><br/>
-                <button onClick={this.closeAllWindows.bind(this)}>close all windows</button><br/>*/}
-
                 {windowses}
                 <Router
                     history={hashHistory}
@@ -52,22 +52,11 @@ class UI extends React.Component {
             </div>
         );
     }
-    openWindow(){
-        this.props.dispatch(WindowsActions.openWindow(winid++, 'window '+winid, 'content of the window '+winid+' :)'));
-        setTimeout(() => this.props.dispatch(WindowsActions.updateWindow(winid-1,"Updated window",<div>I have just updated this window with setTimeout function :D.<br/>Thanks for watching dude :D</div>)), 2000);
-    }
-    closeWindow(){
-        this.props.dispatch(WindowsActions.closeWindow(--winid));
-    }
-    closeAllWindows(){
-        this.props.dispatch(WindowsActions.closeAllWindows());
-    }
 }
-var winid = 0;
 
 module.exports = connect(state => ({
     appState : state.appState,
     windows : state.windowsState.windows,
     wctime : state.windowsState.wctime,
-    locale : new (require('../localize'))('pl')
+    locale : new (require('../Utils/localize'))('pl')
 }))(UI);

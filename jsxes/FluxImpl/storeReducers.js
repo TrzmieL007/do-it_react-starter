@@ -5,7 +5,7 @@
 import { combineReducers } from 'redux';
 import * as As from './appStoreActions';
 import * as Ws from './windowsStoreActions';
-import common from '../commonActions';
+import common from '../Utils/commonActions';
 
 const initialAppState = {
     client: common.getClientData(),
@@ -29,8 +29,8 @@ function windowsState(state = { windows : [] }, action = dfltAction){
         case Ws.UPDATE_WINDOW:
             return Object.assign(obj, {
                 windows : state.windows.map(w => w.id == action.id ? {
-                    id: action.id,
-                    props: action.props
+                    id: w.id,
+                    props: Object.assign({},w.props,action.props)
                 } : w)
             });
         case Ws.CLOSE_ALL_WINDOWS:

@@ -8,7 +8,7 @@ class ClientLogin extends Component {
     }
     showWindow(e){
         e.preventDefault && e.preventDefault();
-        render(<PopupWindow type="info" content="Some content to be displayed"/>,document.getElementById('popup'));
+        render(<PopupWindow type="info" content="Some content to be displayed" name="TempWindow" buttons={["ok"]} actions={{}} />,document.getElementById('popup'));
     }
     static fillError(errorMsg){
         let e = document.getElementById('errorMessage');
@@ -28,7 +28,7 @@ class ClientLogin extends Component {
 
     render() {
         return (
-            <div className="clientLogin">
+            <div styleName="clientLogin">
                 <header className="primary-colour-bg">
                     <div className="container">
                         <div className="navbar-header">

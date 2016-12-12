@@ -1,7 +1,7 @@
 import React from 'react';
 import IndexComponent from '../Classes/IndexComponent';
 
-import $ from '../../../statics/js/ajax';
+// import $ from '../../../statics/js/ajax';
 
 class Index extends IndexComponent {
     constructor(props){

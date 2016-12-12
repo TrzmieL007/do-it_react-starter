@@ -1,0 +1,16 @@
+:local(.spinner) {
+  width: 3em;
+  height: 3em;
+  margin: 16px auto;
+  /*transform:rotate(3600deg);
+  transition:transform 10s linear;*/
+  border-radius: 50%;
+  border: 6px solid blue;
+  border-top: 6px solid transparent;
+  box-sizing: content-box;
+  animation: spinner 1s linear infinite;
+}
+@keyframes spinner {
+  0% { transform: rotate(45deg); }
+  100% { transform: rotate(405deg); }
+}

@@ -2,21 +2,39 @@ import React from 'react';
 import Navigation from '../../NavigationTree';
 import Link from 'react-router/lib/Link';
 import style from '../../ScssStyles/general.scss';
-import common from '../../commonActions';
+import common from '../../Utils/commonActions';
+import ExpandableMenu from '../Components/expandableMenu';
+import TopMenuExpand from '../Components/topMenuExpand';
 
 class Index extends React.Component {
     constructor(props){
         super(props);
-        var linkCreator = (p,v,i) =>
-            (p.push(<li key={i} className={v.side?"visible-xs":"visible-md visible-lg"}>
-                <Link to={v.path} activeClassName="active" {...v.props} onClick={typeof v.callback=='function'?v.callback.bind(props):null}>
-                    <i className={v.icon} /> {v.title}
-                </Link>
-            </li>,<li key={i+'sm'} className={v.side?"hidden-xs":"visible-sm"}>
-                <Link to={v.path} activeClassName="active" {...v.props} aria-label={v.title||v.alt} data-original-title={v.title||v.alt} onClick={typeof v.callback=='function'?v.callback.bind(props):null}>
-                    <i className={v.icon} />
-                </Link>
-            </li>),p);
+        let linkCreator = (p,v,i) => {
+            if(v.hasOwnProperty('dropdown') && v.elems){
+                p.push(<TopMenuExpand key={i} data={v.elems.map((d,id)=>({
+                    id,
+                    name : <Link to={d.path} activeClassName="active" {...d.props}
+                                 onClick={typeof d.callback == 'function' ? d.callback.bind(props) : null}>
+                        <i className={d.icon}/> {d.title}
+                    </Link>,
+                    link : true
+                }))} {...v.props} aAsButton={true} />);
+            }else{
+                p.push(<li key={i} className={v.side ? "visible-xs" : "visible-md visible-lg"}>
+                    <Link to={v.path} activeClassName="active" {...v.props}
+                          onClick={typeof v.callback == 'function' ? v.callback.bind(props) : null}>
+                        <i className={v.icon}/> {v.title}
+                    </Link>
+                </li>, <li key={i + 'sm'} className={v.side ? "hidden-xs" : "visible-sm"}>
+                    <Link to={v.path} activeClassName="active" {...v.props} aria-label={v.title || v.alt}
+                          data-original-title={v.title || v.alt}
+                          onClick={typeof v.callback == 'function' ? v.callback.bind(props) : null}>
+                        <i className={v.icon}/>
+                    </Link>
+                </li>);
+            }
+            return p;
+        };
         this.mainLinks = Navigation.getMenu(props.route.path,'main').reduce(linkCreator,[]);
         this.sideLinks = Navigation.getMenu(props.route.path,'side').reduce(linkCreator,[]);
         this.client = common.getClientData();
@@ -72,17 +90,12 @@ class Index extends React.Component {
                     </footer>
                     <div className="clear-fix"></div>
                     <div style={{padding:"10px 20px 20px"}} className="pull-right">
-                        <div className="btn-group dropup">
-                            <button type="button" className="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                                <i className="icon-cog" /> <span className="caret" />
-                            </button>
-                            <ul className="dropdown-menu dropdown-menu-right">
-                                <li><a onClick={this.switchClient} data-toggle="modal">Switch Client</a></li>
-                                <li><a onClick={this.editClient}>Edit Client</a></li>
-                                <li className="divider"/>
-                                <li><a onClick={this.languageSettings} data-toggle="modal">Language Settings</a></li>
-                            </ul>
-                        </div>
+                        <ExpandableMenu data={[
+                            { id: 0, name: "Switch Client", callback: this.switchClient.bind(this) },
+                            { id: 1, name: "Edit Client", callback: this.editClient.bind(this) },
+                            "divider",
+                            { id: 3, name: "Language Settings", callback: this.languageSettings.bind(this) }
+                        ]} icon="icon-cog" position="right" expandDir="up" />
                     </div>
                 </div>
             </div>
@@ -94,16 +107,18 @@ class Index extends React.Component {
         return <code>{this.props.route.path}</code>;
     }
 
-
-    createClientDataRequest(){
-        return "http://doitwebapitest.azurewebsites.net/api/2.0/Client?token=6TDFLRFJ7M&$filter=Code eq '" + this.props.appState.client.clientCode + "'"
-        +"&$select=ClientId, Name, Registration, UsernameIsEmail, UserCount, PrimaryUserId, "+
-        "UsernameIsGenerated, HideEmailField, UserDOBIsYearOnly, PasswordIsGenerated, MultipleInstitutions, SystemBrandingId, " +
-        "ShowMarkAsCompleted, EnableLanguageRestriction, UsernameGenerationTypeId, APIAccessKey, LanguageId, AllowRetakeTest, HasLogo, ShowPreTestQuestions, CustomRandomisedAssessments";
-    }
-
     languageSettings(){
-        console.log('Language settings (should open modal)');
+        var real = this.props.actions.openWindow(
+            null,
+            this.props.locale.getLocaleString("AccessibilityOptions"),
+            "Coś tu pasoałoby napisać ;P",
+            undefined,
+            {
+                style : { maxWidth : 555 },
+                buttons : ["A","Ok","Cancel"],
+                buttonFunctions : [()=>console.log(real),()=>alert('Hurra!'),()=>this.props.actions.closeWindow(real)]
+            }
+        ).id;
     }
     editClient(){
         console.log('Edit client ???');
@@ -120,7 +135,7 @@ class Index extends React.Component {
                 id,
                 this.props.locale.getLocaleString("AccessibilityOptions"),
                 getContent(),
-                null,
+                undefined,
                 { style : { maxWidth : 555 } }
             );
         };
@@ -150,7 +165,7 @@ class Index extends React.Component {
             id,
             this.props.locale.getLocaleString("AccessibilityOptions"),
             getContent(),
-            null,
+            undefined,
             { style : { maxWidth : 555 } }
         );
     }

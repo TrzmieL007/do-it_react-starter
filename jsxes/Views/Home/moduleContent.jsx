@@ -3,20 +3,21 @@
  */
 import React from 'react';
 import $ from '../../../statics/js/ajax';
-import common from '../../commonActions';
+import common from '../../Utils/commonActions';
 import Link from 'react-router/lib/Link';
 import Audio from '../Components/audio';
+import { Storage } from '../../Utils/utils';
 
 class ModuleContent extends React.Component {
     constructor(props) {
         super(props);
         this.state = { moduleInfo : null };
-        this.getModule(props.params.id);
+        this.getModule(props.params.id.toString());
     }
     componentWillReceiveProps(props){
         if(this.props.params.id !== props.params.id){
             this.setState({ moduleInfo : null });
-            this.getModule(props.params.id);
+            this.getModule(props.params.id.toString());
         }
     }
     shouldComponentUpdate(nextProps, nextState){
@@ -26,14 +27,14 @@ class ModuleContent extends React.Component {
         $.get('http://localhost:8080/doItAPI/modules',{
             clientCode : this.props.appState.client.clientCode.toLowerCase(),
             id: id || this.props.params.id
-        },(res) => this.setState({ moduleInfo : res }));
+        },res => this.setState({ moduleInfo : res }));
     }
     render() {
         if(!this.state.moduleInfo) return <span/>;
         let list = this.state.moduleInfo.modules ? this.state.moduleInfo.modules.map((m,i) =>
             <li key={i}>
-               <Link data-id={m.id} to={"/assessment/"+m.id.replace(/^s?id/,'')+"?mg="+this.state.moduleInfo.id} className="module-icon-a">
-                   <div tabIndex="0" role="button" className="module-icon" data-icon-type="assessment" data-icon-id={m.id.replace(/^s?id/,'')} data-icon-mgid={this.state.moduleInfo.id}>
+               <Link data-id={m.id} to={(m.id.match(/^sid[0-9]+/)?"/survey/":"/assessment/")+m.id.replace(/^s?id/,'')} className="module-icon-a">
+                   <div tabIndex="0" role="button" className="module-icon">
                        <div className="module-icon-image">
                            <i className={m.icon} style={{fontSize:'6em',marginLeft:0}} />
                        </div>
@@ -53,24 +54,28 @@ class ModuleContent extends React.Component {
                 <Link to={this.props.route.path.replace(':id',this.state.moduleInfo.startAt)} className="btn btn-lg btn-primary btn-block goto-next-module-group">Start</Link>
             </div>
         </div>;
+        let description = this.state.moduleInfo.description ? this.state.moduleInfo.description.hasOwnProperty('lines')
+            ? this.state.moduleInfo.description.lines.map((line,i) => <p key={i}>{line}</p>)
+            : this.state.moduleInfo.description : null;
         return (<div className="tab-content" styleName="content">
-            <h2 className="page-header" tabIndex="0" style={{outline: "none"}}>{this.state.moduleInfo.name}</h2>
+            {this.state.moduleInfo.name?<h2 className="page-header" tabIndex="0" style={{outline: "none"}}>{this.state.moduleInfo.name}</h2>:null}
             <div>
-                <Audio src={this.state.moduleInfo.descriptionAudio} />
-                {this.state.moduleInfo.description}{this.state.moduleInfo.note ? <div><b>Note</b>{this.state.moduleInfo.note}</div> : null}
+                {this.state.moduleInfo.descriptionAudio?<Audio src={this.state.moduleInfo.descriptionAudio} preload="auto" />:null}
+                {description}{this.state.moduleInfo.note ? <div><b>Note</b>{this.state.moduleInfo.note}</div> : null}
             </div>
             {this.props.params.id == 'overview' && this.state.moduleInfo.iframe ?
                 <span>
                     <iframe
                         src={this.state.moduleInfo.iframe.src}
                         width={this.state.moduleInfo.iframe.width}
-                        height={this.state.moduleInfo.iframeheight}
+                        height={this.state.moduleInfo.iframe.height}
                         frameBorder="0" />
                     <br/><br/><br/>{list}
                 </span>
             :
                 <span>
-                    <br/><br/>
+                    {description?<br/>:null}
+                    {description?<br/>:null}
                     <ul className="module-icons thumbnails">
                         {list}
                     </ul>

@@ -7,6 +7,7 @@ function getXmlDoc(){
 }
 
 var authenticate;
+var debug;
 var error = new Error('Wrong data object supplied. It should be string or object with primitive types');
 
 function reduceData(array,key,data){
@@ -84,11 +85,11 @@ function handleError(e,xmlDoc,fail,always){
 }
 function simplify(method, url, data, done, fail, always, progress, async, config){
     let get = method.toLowerCase() === 'get';
-    data = get ? parseData(data) : data;
-    var xmlDoc = getXmlDoc();
-    var p = progress ? null : createProgress();
-    async =(async !== undefined && async !== null) ? async : true;
-    xmlDoc.open(method, url + (get && data ? '?' +data : ''), async);
+    data = get ? parseData(data) : data;                                    if(debug) console.log('Ajax data: %o',data);
+    let xmlDoc = getXmlDoc();
+    let p = progress ? null : createProgress();
+    async = (async !== undefined && async !== null) ? async : true;
+    xmlDoc.open(method, url + (get && data ? '?' +data : ''), async);       if(debug) console.log('Ajax url: %s',url + (get && data ? '?' +data : ''));
     if(config && config.json){
         xmlDoc.setRequestHeader("Accept","application/json");
     }
@@ -104,7 +105,7 @@ function simplify(method, url, data, done, fail, always, progress, async, config
     xmlDoc.onreadystatechange = handleStateChange.bind(this, xmlDoc, done, fail, always, p, config, async);
     if(async) xmlDoc.timeout = config ? config.timeout : undefined;
     xmlDoc.ontimeout = handleError.bind(this,xmlDoc,fail,always);
-    var progressFunction = progress ? progress : function(e){updateProgress(e,p)};
+    let progressFunction = progress ? progress : function(e){updateProgress(e,p)};
     xmlDoc.addEventListener("progress", progressFunction);
     get?xmlDoc.send():xmlDoc.send(JSON.stringify(data));
 }
@@ -122,7 +123,7 @@ function updateProgress(oEvent,p){
         return;
     }
     if(oEvent.lengthComputable){
-        var percentComplete = parseInt((oEvent.loaded / oEvent.total)*10000)/100;
+        let percentComplete = parseInt((oEvent.loaded / oEvent.total)*10000)/100;
         //console.log(percentComplete+"%");
         return percentComplete;
     }
@@ -130,7 +131,7 @@ function updateProgress(oEvent,p){
     return null;
 }
 
-var Ajax = {
+const Ajax = {
     get : function(url, data, done, fail, always, progress){
         simplify('GET',url,data,done,fail,always,progress);
     },
@@ -165,6 +166,9 @@ var Ajax = {
     },
     setAuthenticate : function(auth){
         authenticate = auth;
+    },
+    setDebug : function(deb){
+        debug = deb;
     }
 };
 

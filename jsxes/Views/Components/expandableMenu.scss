@@ -1,0 +1,13 @@
+:local(.expandableMenu), :local(.expandableMenuLink) {
+  ul {
+    overflow: hidden;
+    display: block;
+    transition: top 256ms ease-in, bottom 256ms ease-in, opacity 128ms ease-out, padding 256ms ease-out;
+  }
+  :local(.openLink) {
+    cursor: pointer;
+  }
+}
+:local(.expandableMenuLink) {
+  ul { margin: 0; }
+}

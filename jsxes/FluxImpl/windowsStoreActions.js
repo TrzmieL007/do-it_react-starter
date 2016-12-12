@@ -20,8 +20,8 @@ export const UPDATE_WINDOW = "UPDATE_WINDOW";
  * @param props
  * @returns {{type: string, id: *, props: object}}
  */
-export function openWindow(id, name, content, windowType = '', props){
-    return { type : OPEN_WINDOW, id: id || uuid.v4(), props : Object.assign(props||{},{ name, content, windowType }) };
+export function openWindow(id, name, content, windowType = 'popup', props){
+    return { type : OPEN_WINDOW, id: id || uuid.v4(), props : Object.assign(props||{},{ name, content, type : windowType }) };
 }
 /**
  * Closes the window with matched <code>id</code>.
@@ -47,6 +47,6 @@ export function closeAllWindows(){
  * @param props
  * @returns {{type: string, id: *, title: *, content: *}}
  */
-export function updateWindow(id, name, content, windowType = '', props){
-    return { type : UPDATE_WINDOW, id, props : Object.assign(props||{},{ name, content, windowType }) };
+export function updateWindow(id, name, content, windowType = 'popup', props){
+    return { type : UPDATE_WINDOW, id, props : Object.assign(props||{},{ name, content, type : windowType }) };
 }

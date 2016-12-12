@@ -1,7 +1,9 @@
 import React from 'react';
 import { render } from "react-dom";
 import ClientLogin from './ClientLogin/clientLogin';
+import $ from '../statics/js/ajax';
 
+// $.setDebug(true);
 var oidSettings = {
     authority: 'https://accounts.doitprofiler.net/',
     client_id: 'ClientAssessments',
@@ -17,6 +19,42 @@ var oidSettings = {
 
 window.client = new Oidc.OidcClient(oidSettings);
 
+function getClientData() {
+    let data = {
+        token: "6TDFLRFJ7M",
+        "$filter": "Code eq '" + decodeURIComponent(localStorage.getItem('clientCode')) + "'",
+        "$select": "ClientId,HasLogo,Name,Tests,IntroductionText,BrandingText,APIAccessKey"
+    };
+    $.ajax({
+        authenticate: 1,
+        url: 'http://doitwebapitest.azurewebsites.net/api/2.0/Client',
+        data,
+        done : d => {
+            if(d.length) {
+                console.log('done %o', d);
+                localStorage.setItem('clientData',encodeURIComponent(JSON.stringify(d)));
+                getUserData(d.ClientId, d.APIAccessKey);
+            }
+        },
+        fail : d => console.error(d),
+        always : d => console.info(d)
+    });
+}
+function getUserData(clientId,accessToken) {
+    let data = {
+        token: accessToken,
+        "$filter": "ClientId eq " + clientId
+    };
+    $.ajax({
+        authenticate: 1,
+        url: 'http://doitwebapitest.azurewebsites.net/api/2.0/User',
+        data: data,
+        beforeSend: ()=> console.log(data),
+        done : d => console.log(d),
+        fail : d => console.error(d),
+        always : d => console.info(d)
+    });
+}
 function checkLogin(){
     return new Promise(function(resolve,reject) {
         var ea;
@@ -56,6 +94,7 @@ function checkLogout(){
 }
 
 checkLogin().then(function(){
+    getClientData();
     drawUI(1);
 },function(){
     checkLogout();
@@ -88,11 +127,8 @@ checkLogin().then(function(){
 
 function drawUI(doShow){
     require.ensure(['./UI/ui.jsx'],function(){
-        // let createStore = require('redux').createStore;
         let Provider = require('./FluxImpl/Provider/ProviderDebug');
         let UI = require('./UI/ui.jsx');
-        // let reducers = require('./Store/reducers.js');
-        // const store = createStore(reducers);
 
         if(doShow){
             render((

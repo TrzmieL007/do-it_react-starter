@@ -4,7 +4,7 @@
 import React from 'react';
 import Link from 'react-router/lib/Link';
 import $ from '../../../statics/js/ajax';
-import common from '../../commonActions';
+import common from '../../Utils/commonActions';
 
 class SideMenu extends React.Component {
     constructor(props) {
