@@ -1,6 +1,8 @@
 :local(.img).loading {
   position: relative;
   display: inline-block;
+  min-width: 66px;
+  min-height: 66px;
   &:before {
     background: rgba(255, 255, 255, 0.91);
     top: 0;

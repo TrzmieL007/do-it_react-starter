@@ -50,7 +50,7 @@ class VariableStorage {
         return globalVariable[key];
     }
     static setItem(key,value){
-        globalVariable[key] = value;
+        return globalVariable[key] = value;
     }
     static clear(){
         globalVariable = {};
@@ -106,7 +106,8 @@ export class BookKeeper {
         let storage = BookKeeper.getStoreage(ss);
         let out = storage ? storage.getItem(bookName) : CookieMonster.getACookieFromAPlate(bookName);
         try {
-            return JSON.parse(decodeURIComponent(atob(out)));
+            out = out ? decodeURIComponent(atob(out)) : out;
+            return JSON.parse(out);
         } catch (e) {
             return out;
         }
@@ -114,6 +115,8 @@ export class BookKeeper {
     static storeBookOnAShelf(bookName, book, ss){
         if(typeof book === 'object'){
             book = btoa(encodeURIComponent(JSON.stringify(book)));
+        }else{
+            book = btoa(encodeURIComponent(book));
         }
         let storage = BookKeeper.getStoreage(ss);
         if(storage){
@@ -121,6 +124,7 @@ export class BookKeeper {
         }else{
             CookieMonster.bakeACookie(bookName, book);
         }
+        return BookKeeper.getBookFromAShelf(bookName,ss);
     };
     static hasBook(bookName,ss){
         let storage = BookKeeper.getStoreage(ss);
@@ -151,16 +155,21 @@ export class Storage {
     static clear(ss){
         BookKeeper.burnTheLibrary(ss);
     }
-    static removeItem(bookName, ss){
-        BookKeeper.burnTheBook(bookName, ss);
+    static removeItem(itemName, ss){
+        BookKeeper.burnTheBook(itemName, ss);
     };
-    static getItem(bookName, ss){
-        return BookKeeper.getBookFromAShelf(bookName, ss)
+    static getItem(itemName, ss){
+        return BookKeeper.getBookFromAShelf(itemName, ss)
     };
-    static setItem(bookName, book, ss){
-        BookKeeper.storeBookOnAShelf(bookName, book, ss);
+    static setItem(itemName, item, ss){
+        return BookKeeper.storeBookOnAShelf(itemName, item, ss);
     };
-    static hasOwnProperty(bookName, ss){
-        return BookKeeper.hasBook(bookName, ss);
+    static hasOwnProperty(itemName, ss){
+        return BookKeeper.hasBook(itemName, ss);
+    }
+
+    static popItem(itemName, ss){
+        let item = BookKeeper.getBookFromAShelf(itemName, ss);
+        return item ? (BookKeeper.burnTheBook(itemName, ss),item) : null;
     }
 }

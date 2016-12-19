@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
 import PopupWindow from '../PopupWindow/popupWindow';
+import { Storage } from '../Utils/utils';
+import { signout } from '../Utils/commonActions';
 
 class ClientLogin extends Component {
     constructor(props) {
@@ -12,6 +14,7 @@ class ClientLogin extends Component {
     }
     static fillError(errorMsg){
         let e = document.getElementById('errorMessage');
+        if(!e) return;
         e.innerHTML = "";
         if(errorMsg){
             let close = e.appendChild(document.createElement('a'));
@@ -24,6 +27,13 @@ class ClientLogin extends Component {
             };
             e.appendChild(document.createElement('span')).innerHTML = errorMsg;
         }
+    }
+    static fillProgressStatus(status){
+        let e = document.getElementById('loginProgress');
+        if(e) e.innerHTML = status || "";
+    }
+    componentWillMount(){
+        this.clientChosen = Storage.getItem('clientCode') || undefined;
     }
 
     render() {
@@ -45,13 +55,15 @@ class ClientLogin extends Component {
                             <br/>
                             <div id="errorMessage" />
                             <label className="sr-only" htmlFor="ClientCode">Client Code</label>
-                            <input autoFocus={true} id="ClientCode" name="ClientCode" placeholder="Enter Client Code:" required="true" type="text" />
+                            <input autoFocus={true} id="ClientCode" name="ClientCode" placeholder="Enter Client Code:" required="true" type="text" value={this.clientChosen} readOnly={this.clientChosen} />
                             <br/>
-                            <button type="submit">Go</button>
+                            <div id="loginProgress" />
+                            <button type="submit">{this.clientChosen?"Authenticate":"Go"}</button>
                             <br/>
                             <a href="#" onClick={this.showWindow}>
                                 What is my Client Code?
                             </a>
+                            {this.clientChosen ? <button id="exitSystem" type="button" onClick={signout}>Exit System</button> : null}
                         </form>
                     </div>
                 </div>

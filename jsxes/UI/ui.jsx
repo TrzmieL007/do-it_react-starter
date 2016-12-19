@@ -11,7 +11,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as AppStoreActions from '../FluxImpl/appStoreActions';
 import * as WindowsActions from '../FluxImpl/windowsStoreActions';
-import $ from '../../statics/js/ajax';
+// import $ from '../../statics/js/ajax';
 import { Storage } from '../Utils/utils';
 
 class UI extends React.Component {
@@ -19,11 +19,11 @@ class UI extends React.Component {
         super(props);
         this.state = {};
         this.routes = Navigation.routes;
-        $.get('http://localhost:8080/doItAPI/assessments', {
+        /*$.get('http://localhost:8080/doItAPI/assessments', {
             clientCode: props.appState.client.clientCode.toLowerCase()
         },res => {
             Object.keys(res).forEach(c => Storage.setItem('assId_'+c,res[c]));
-        });
+        });*/
     }
 
     componentWillReceiveProps(nextProps){
@@ -58,5 +58,5 @@ module.exports = connect(state => ({
     appState : state.appState,
     windows : state.windowsState.windows,
     wctime : state.windowsState.wctime,
-    locale : new (require('../Utils/localize'))('pl')
+    locale : new (require('../Utils/localize'))(Storage.getItem('profile').Language || 1)
 }))(UI);

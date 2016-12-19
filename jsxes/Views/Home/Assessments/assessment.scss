@@ -10,7 +10,34 @@
   box-sizing: content-box;
   animation: spinner 1s linear infinite;
 }
+:local(.loadingProgressDiv){
+  position: fixed;
+  top:0;
+  left:0;
+  right: 0;
+  z-index: 999;
+  :local(.loadingImages), :local(.loadingSounds){
+    &.loading { height: 4px; }
+    &.finished { animation: finished 1024ms both; }
+  }
+  :local(.loadingImages) { background-color: #FFEE66; }
+  :local(.loadingSounds) { background-color: #0094CE; }
+}
 @keyframes spinner {
   0% { transform: rotate(45deg); }
   100% { transform: rotate(405deg); }
+}
+@keyframes finished {
+  0% {
+    opacity: 1;
+    height: 4px;
+  }
+  50% {
+    opacity: 0;
+    height: 4px;
+  }
+  100% {
+    opacity: 0;
+    height: 0;
+  }
 }

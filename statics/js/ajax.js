@@ -97,6 +97,9 @@ function simplify(method, url, data, done, fail, always, progress, async, config
     if((authenticate || (config && config.authenticate)) && localStorage.getItem('access_token')){
         xmlDoc.setRequestHeader("Authorization","Bearer "+localStorage.getItem('access_token'));
     }
+    if(config && config.headers){
+        Object.keys(config.headers).forEach(key => xmlDoc.setRequestHeader(key,config.headers[key]));
+    }
     //if(!get){
     //	xmlDoc.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     //}

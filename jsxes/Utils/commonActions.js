@@ -2,21 +2,12 @@
  * Created by trzmiel007 on 25/11/16.
  */
 let translator = require('./localize');
+import { Storage } from './utils';
 
 export default class CommonActions {
     /**
      * Logs out user and removes connected data from localStorage
      */
-    static signout(){
-        window.client.createSignoutRequest({ id_token_hint: window.signinResponse && window.signinResponse.id_token, state: { foo: 'bar' } }).then(function(req) {
-            localStorage.removeItem('clientCode');
-            localStorage.removeItem('expires_at');
-            localStorage.removeItem('profile');
-            localStorage.removeItem('id_token');
-            localStorage.removeItem('access_token');
-            window.location = req.url;
-        });
-    }
     static feedbackModal(){
         if(this.actions && this.actions.openWindow){
             let x = this.actions.openWindow(null, 'Feedback', 'Now I just need to fill this window with content :)');
@@ -34,10 +25,10 @@ export default class CommonActions {
      * @returns {{}}
      */
     static getUserData(){
-        let userData = JSON.parse(atob(localStorage.getItem('profile')));
+        let userData = Storage.getItem('profile');
         let fields = arguments.length ? Array.prototype.slice.call(arguments) : ["email"];
         let userDataObj = {};
-        fields.forEach(f => userDataObj[f] = userData[f]);
+        fields.forEach(f => userDataObj[f] = userData?userData[f]:null);
         // TODO: remove this mock
         userDataObj.language = 'en';
         return userDataObj;
@@ -51,7 +42,7 @@ export default class CommonActions {
      */
     static getClientData(){
         let fields = arguments.length ? Array.prototype.slice.call(arguments) : ["image","name"];
-        let clientData = { clientCode: decodeURIComponent(localStorage.getItem('clientCode')) };
+        let clientData = { clientCode: Storage.getItem('clientCode') };
         fields.forEach(f => clientData[f] = this.getClientProperty(f,/*this param to be removed if not needed anymore*/clientData.clientCode));
         return clientData;
     }
@@ -63,6 +54,7 @@ export default class CommonActions {
      * @returns {*}
      */
     static getClientProperty(name,cc){
+        if(!cc) return null;
         switch(name){
             // TODO: replace this hardcoded mock!
             case 'image': return cc.toLowerCase() == 'dyslexia+' ? 'https://doitcdn.azureedge.net/shared/images/thumbs/0001067_200_150.jpeg' : null;
@@ -106,4 +98,16 @@ export default class CommonActions {
             authenticate: true
         });
     }*/
+}
+
+export function signout(){
+    window.client.createSignoutRequest({ id_token_hint: window.signinResponse && window.signinResponse.id_token, state: { foo: 'bar' } }).then(function(req) {
+        // Storage.removeItem('clientCode');
+        // Storage.removeItem('expires_at');
+        // Storage.removeItem('profile');
+        // Storage.removeItem('id_token');
+        // Storage.removeItem('access_token');
+        Storage.clear();
+        window.location = req.url;
+    });
 }

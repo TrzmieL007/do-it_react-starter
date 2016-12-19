@@ -3,7 +3,7 @@
  */
 import React from 'react';
 import common from '../../../Utils/commonActions';
-import Audio from '../../Components/audio';
+// import Audio from '../../Components/audio';
 
 class Question extends React.Component {
     constructor(props){
@@ -31,13 +31,13 @@ class Question extends React.Component {
         this.state.timerElapsed = false;
         this.state.seeQuestion = false;
         if(!constructor) this.setState(this.state);
-        this.replayCount = 0;
+        // this.replayCount = 0;
         this.startedOn = null;
     }
     render(){
-        let audio = this.question.QuestionSound ? <Audio src={common.getSourceURL()+this.question.QuestionSound} autoplay={!!this.question.SoundAuto} onEnded={()=>{
+        /*let audio = this.question.QuestionSound ? <Audio src={common.getSourceURL()+this.question.QuestionSound} autoplay={!!this.question.SoundAuto} onEnded={()=>{
             if(this._disableUntilSoundFinish) this.setState({ answeringEnabled: true });
-        }} hidden={!this.question.ShowPlaySoundButton} /> : null;
+        }} hidden={!this.question.ShowPlaySoundButton} playNow={this.props.replaySound} onPlay={()=>(++this.replayCount)} /> : null;*/
         let questionPanelHeight = (this.question.QuestionPanelHeight > 0 ? this.question.QuestionPanelHeight : this.assessment.QuestionPanelHeight);
         let questionImageLayout = (this.question.QuestionImageLayout > 0 ? this.question.QuestionImageLayout : this.assessment.QuestionImageLayout);
 
@@ -144,7 +144,7 @@ class Question extends React.Component {
                             </div>
                             {questionText2}
                             <div className="assessmentQuestionText">
-                                {audio}
+                                {/*audio*/}
                                 <span dangerouslySetInnerHTML={{__html:this.props.question.QuestionText}} />
                             </div>
                             <div style={{ textAlign: 'center' }} className={((questionImageLayout == 0 || questionImageLayout == 1) && this.question.ImageFile != '') ? '' : 'hidden'}>
@@ -178,7 +178,7 @@ class Question extends React.Component {
             startedOn: this.startedOn.toISOString(),
             completedOn: completedOn.toISOString(),
             duration: ((completedOn - this.startedOn) / 1000),
-            replayCount: this.replayCount,
+            // replayCount: this.replayCount - (this.question.QuestionSound ? 1 : 0),
             soundStatus: this.props.soundStatus,
             confidenceValue: 0,
             attributes: attributes

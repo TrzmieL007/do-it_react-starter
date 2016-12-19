@@ -49,8 +49,8 @@
   position: fixed;
   top: 0;
   left: 0;
-  height: 2px;
-  background-color: #4ff354;
+  height: 3px;
+  background-color: #0094ce;
   opacity: 1;
   transition: width 512ms, opacity 1024ms 1024ms, background-color 512ms;
   &.loaded {

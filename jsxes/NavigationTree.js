@@ -3,7 +3,7 @@
  */
 
 import Index from './Views/Home/index';
-import CA from './Utils/commonActions';
+import CA, { signout } from './Utils/commonActions';
 
 var navigation = {
     '/': {
@@ -13,7 +13,7 @@ var navigation = {
             {path: '/Manage', title: "Manage", icon: "icon-dashboard"},
             {path: '/helpdesk', title: "Help Desk", icon: "icon-question-sign"},
             {path: '/Account/Profile', alt: "My Acount", icon: "icon-user", side: true},
-            {alt: "Logout", icon: "icon-signout", callback: CA.signout, side: true}
+            {alt: "Logout", icon: "icon-signout", callback: signout, side: true}
         ],
         Manage: {
             menu: [
@@ -25,7 +25,7 @@ var navigation = {
                 {path: '/Manage/Maintenance', title: "Maintenance", icon: "fa fa-wrench"},
                 {path: '/helpdesk', title: "Help Desk", icon: "icon-question-sign"},
                 {dropdown: "menuUser", side: true, props: { icon: 'icon-user icon-xxlarge' }, elems:
-                    [{path: '/Account/Profile', title: "Profile"}, {path: '/Account/Logoff', title: "Log out", callback: CA.signout}]
+                    [{path: '/Account/Profile', title: "Profile"}, {path: '/Account/Logoff', title: "Log out", callback: signout}]
                 },
                 {path: '/Manage/Settings', alt: 'Settings (SU)', icon: "icon-cog", side: true},
                 {alt: 'Feedback', icon: "icon-bullhorn", callback: CA.feedbackModal, side: true},

@@ -5,6 +5,7 @@ import React from 'react';
 import Link from 'react-router/lib/Link';
 import $ from '../../../statics/js/ajax';
 import common from '../../Utils/commonActions';
+import { Storage } from '../../Utils/utils';
 
 class SideMenu extends React.Component {
     constructor(props) {
@@ -21,11 +22,75 @@ class SideMenu extends React.Component {
     shouldComponentUpdate(nextProps, nextState){
         return this.props.params.id !== nextProps.params.id || !common.compareObj(this.state.listOfModules, nextState.listOfModules);
     }
-
+    sortingModules(o1,o2){
+        return o1.id == 'overview' ? -1 : o2.id == 'overview' ? 1 : o1.id - o2.id;
+    }
     getListOfModules(){
-        $.get('http://localhost:8080/doItAPI/modulesList',{ clientCode : this.props.appState.client.clientCode.toLowerCase() },(res)=>{
-            this.setState({ listOfModules : res });
+        // [{"APIAccessKey":null,"BrandingText":null,"IntroductionText":"<p><a href=\"https://doitcdn.azureedge.net/shared/sounds/dyslexia+/it.mp3\" title=\"Hear text aloud\" class=\"sm2_button\">sounds</a> Welcome to Dyslexia+. Below is our introductory video. You may wish to review it before you start.</p>\r\n\r\n<iframe src=\"https://player.vimeo.com/video/183620824\" width=\"640\" height=\"361\" frameborder=\"0\" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>\r\n","Tests":"567,572,905,1032,1053,842,592,674,985,983,1042","Name":"Dyslexia+","HasLogo":true,"ClientId":1067}]
+        // [{"AssessmentId":567,"ModuleGroupId":2381,"MinimumAge":0,"MaximumAge":999,"DisplayOrder":0}]
+        // ModuleGroupId - Do którego module group należy :)
+        // DisplayOrder - W jakiej kolejności w grupie występuje :)
+        // ClientId - jak nazwa wskazuje
+        // AssessmentId - id konkretnego assessmentu
+        let lom = { overview : { id : 'overview', name : "Overview" } };
+        $.ajax({
+            url: 'http://doitwebapitest.azurewebsites.net/api/2.0/ClientAssessment',
+            data: { '$filter' : 'ClientId eq '+Storage.getItem('clientData').ClientId },
+            authenticate: 1,
+            headers: { ClientCode : Storage.getItem('clientCode') },
+            done: d => {
+                console.log(d);
+                if(Array.isArray(d)) {
+                    lom = d.reduce((p,a) => {
+                            if(p.hasOwnProperty(a.ModuleGroupId)){
+                                ++p[a.ModuleGroupId].modules;
+                                p[a.ModuleGroupId].assessments.push({ id : a.AssessmentId, order : a.DisplayOrder });
+                            } else p[a.ModuleGroupId] = {
+                                id : a.ModuleGroupId,
+                                modules : 1,
+                                name : "Modules",
+                                completed : 0,
+                                assessments : [{ id : a.AssessmentId, order : a.DisplayOrder }],
+                                surveys : []
+                            };
+                            return p;
+                        },lom);
+                    $.ajax({
+                        url: 'http://doitwebapitest.azurewebsites.net/api/2.0/ClientSurvey',
+                        data: { '$filter' : 'ClientId eq '+Storage.getItem('clientData').ClientId },
+                        authenticate: 1,
+                        headers: { ClientCode : Storage.getItem('clientCode') },
+                        done: d => {
+                            console.log(d);
+                            if(Array.isArray(d)){
+                                d.reduce((p,s) => {
+                                    if(p.hasOwnProperty(s.ModuleGroupId)){
+                                        ++p[s.ModuleGroupId].modules;
+                                        p[s.ModuleGroupId].surveys.push({ sid : s.SurveyId, order : s.DisplayOrder });
+                                    }
+                                    else p[a.ModuleGroupId] = {
+                                        id : s.ModuleGroupId,
+                                        modules : 1,
+                                        name : "Modules",
+                                        completed : 0,
+                                        assessments : [],
+                                        surveys : [{ sid : s.SurveyId, order : s.DisplayOrder }]
+                                    };
+                                    return p;
+                                },lom);
+                            }
+                            this.setState({listOfModules: Storage.setItem('modules',Object.keys(lom).map(m => lom[m]).sort(this.sortingModules))})
+                        },
+                        fail: () => this.setState({listOfModules: Storage.setItem('modules',Object.keys(lom).map(m => lom[m]).sort(this.sortingModules))})
+                    });
+                }
+            },
+            fail: function(){ console.error(arguments); }
         });
+        //
+        // $.get('http://localhost:8080/doItAPI/modulesList',{ clientCode : this.props.appState.client.clientCode.toLowerCase() },(res)=>{
+        //     this.setState({ listOfModules : res });
+        // });
     }
 
     render() {

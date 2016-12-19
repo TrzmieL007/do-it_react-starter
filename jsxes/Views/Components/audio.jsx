@@ -11,6 +11,9 @@ class Audio extends React.Component {
         this.playAudio = this.playAudio.bind(this);
         this.loadingProgress = this.loadingProgress.bind(this);
     }
+    componentWillReceiveProps(newProps){
+        if(newProps.playNow && this.audio) this.audio.play();
+    }
 
     render() {
         let mp3 = this.props.src.replace(/\.[mp3og]{3}$/,".mp3");
@@ -19,7 +22,7 @@ class Audio extends React.Component {
             <audio ref={a => this.audio = a}
                    onLoadStart={this.props.onLoadstart}
                    onLoadedData={this.loadingProgress}
-                   onCanPlayThrough={this.props.onCanPlayThrough}
+                   onCanPlayThrough={this.props.autoplay ? ()=>{this.audio.play();this.props.onCanPlayThrough()} : this.props.onCanPlayThrough}
                    onPlay={this.audioEvent}
                    onProgress={this.loadingProgress}
                    onPause={this.audioEvent}
@@ -33,7 +36,7 @@ class Audio extends React.Component {
                 ? this.state.loading > -1
                     ? <div className={this.state.loading > 99.9 ? "loaded" : ''} styleName="loadingProgress" style={{
                         width : this.state.loading+"%",
-                        backgroundColor : this.state.loading < 20 ? '#ff0000' : this.state.loading < 50 ? '#ffff00' : this.state.loading < 80 ? '#00aa00' : null
+                        backgroundColor : this.state.loading < 20 ? '#005B83' : this.state.loading < 50 ? '#00719C' : this.state.loading < 80 ? '#007DB5' : null
                       }} />
                     : null
                 : <span title="Hear text aloud" styleName={"sm2_button"+(this.state.playing?" sm2_playing":"")} onClick={this.playAudio}>
@@ -54,6 +57,11 @@ class Audio extends React.Component {
             </span>}
         </span>);
     }
+    getProgress(){
+        let rng = [];
+        for(let i = 0; i < this.audio.buffered.length; ++i) rng.push([this.audio.buffered.start(i),this.audio.buffered.end(i)]);
+        return rng.reduce((p,e) => p += e[1] - e[0],0) / this.audio.duration;
+    }
     loadingProgress(ev){
         let rng = [];
         for(let i = 0; i < this.audio.buffered.length; ++i) rng.push([this.audio.buffered.start(i),this.audio.buffered.end(i)]);
@@ -64,7 +72,7 @@ class Audio extends React.Component {
             if(this.props.onLoaded) this.props.onLoaded();
             if(this.state < 100) this.setState({ loading : 100 });
             setTimeout(this.removeLoader.bind(this),2048);
-            if(this.props.autoplay) this.audio.play();
+            // if(this.props.autoplay) this.audio.play();
         }
     }
     removeLoader(){

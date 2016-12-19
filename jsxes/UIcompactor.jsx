@@ -1,17 +1,18 @@
 import React from 'react';
 import { render } from "react-dom";
 import ClientLogin from './ClientLogin/clientLogin';
+import { Storage } from './Utils/utils';
 import $ from '../statics/js/ajax';
 
 // $.setDebug(true);
-var oidSettings = {
+let oidSettings = {
     authority: 'https://accounts.doitprofiler.net/',
     client_id: 'ClientAssessments',
     redirect_uri: 'http://localhost:8080',
     post_logout_redirect_uri: 'http://localhost:8080',
     response_type: 'id_token token',
     scope: 'openid profile email roles sampleAPI',
-    acr_values: "clientCode:pda14mag",
+    // acr_values: "clientCode:pda14mag",
 
     filterProtocolClaims: true,
     loadUserInfo: true
@@ -21,58 +22,65 @@ window.client = new Oidc.OidcClient(oidSettings);
 
 function getClientData() {
     let data = {
-        token: "6TDFLRFJ7M",
-        "$filter": "Code eq '" + decodeURIComponent(localStorage.getItem('clientCode')) + "'",
+        "$filter": "Code eq '" + Storage.getItem('clientCode') + "'",
         "$select": "ClientId,HasLogo,Name,Tests,IntroductionText,BrandingText,APIAccessKey"
     };
+    ClientLogin.fillProgressStatus('Fetching Client data...');
     $.ajax({
         authenticate: 1,
         url: 'http://doitwebapitest.azurewebsites.net/api/2.0/Client',
         data,
+        headers: { ClientCode : Storage.getItem('clientCode') },
         done : d => {
+            console.log(d);
             if(d.length) {
-                console.log('done %o', d);
-                localStorage.setItem('clientData',encodeURIComponent(JSON.stringify(d)));
-                getUserData(d.ClientId, d.APIAccessKey);
+                let cl = d[0];
+                Storage.setItem('clientData',cl);
+                getUserData();
             }
         },
-        fail : d => console.error(d),
-        always : d => console.info(d)
+        fail : d => console.error(d)
     });
 }
-function getUserData(clientId,accessToken) {
+function getUserData() {
+    let email = Storage.getItem('profile').email;
     let data = {
-        token: accessToken,
-        "$filter": "ClientId eq " + clientId
+        "$filter": "Email eq '" + email + "'"
     };
+    ClientLogin.fillProgressStatus('Fetching User data...');
     $.ajax({
         authenticate: 1,
         url: 'http://doitwebapitest.azurewebsites.net/api/2.0/User',
         data: data,
-        beforeSend: ()=> console.log(data),
-        done : d => console.log(d),
-        fail : d => console.error(d),
-        always : d => console.info(d)
+        headers: { ClientCode : Storage.getItem('clientCode') },
+        done : d => {
+            Storage.setItem('userData',d[0]);
+            drawUI(1);
+        },
+        fail: d => console.error(d),
     });
 }
 function checkLogin(){
+    if(window.location.hash.match(/^#\/.+/)) {
+        Storage.setItem('hash', window.location.hash, true);
+    }
     return new Promise(function(resolve,reject) {
-        var ea;
+        let ea;
         if(window.location.hash.match(/^#id_token=.+/)){
             window.client.processSigninResponse().then(function (response){
                 window.signinResponse = response;
                 console.log(response);
-                localStorage.setItem('expires_at', response.expires_at);
-                localStorage.setItem('profile', btoa(JSON.stringify(response.profile)));
-                localStorage.setItem('id_token', response.id_token);
+                Storage.setItem('expires_at', response.expires_at);
+                Storage.setItem('profile', response.profile);
+                Storage.setItem('id_token', response.id_token);
                 localStorage.setItem('access_token', response.access_token);
-                window.history.replaceState(null, 'SignedIn', window.location.href.replace(window.location.hash, ''));
+                window.history.replaceState(null, 'SignedIn', window.location.href.replace(window.location.hash, Storage.popItem('hash',true) || ''));
                 return resolve();
             }).catch(function(err){
                 console.error('ERROR: %o', err);
                 return reject();
             });
-        }else if (!!(ea = localStorage.getItem('expires_at')) && (ea * 1000 > +(new Date()))){
+        }else if (!!(ea = Storage.getItem('expires_at')) && (ea * 1000 > +(new Date()))){
             return resolve();
         }else{
             return !!window.signinResponse ? resolve() : reject();
@@ -95,7 +103,7 @@ function checkLogout(){
 
 checkLogin().then(function(){
     getClientData();
-    drawUI(1);
+    getUserData();
 },function(){
     checkLogout();
     drawUI(0);
@@ -108,15 +116,19 @@ checkLogin().then(function(){
                 ClientLogin.fillError("You have to supply Client Code to proceede");
                 return document.querySelector('form.form-login input').disabled = document.querySelector('form.form-login button').disabled = false;
             }
+            ClientLogin.fillProgressStatus('Prepering Login request...');
             if(document.getElementById('errorLabel')){
                 ClientLogin.fillError("");
             }
-            window.client.settings._acr_values = "clientCode:"+clientCode;
+            window.client._settings._acr_values = "clientCode:"+clientCode;
+            {/*oidSettings.acr_values = "clientCode:"+clientCode;*/}
+            {/*window.client = new Oidc.OidcClient(oidSettings);*/}
             window.client.createSigninRequest({ state: { foo: 'bar_'+(+(new Date())) } }).then(function(req) {
-                localStorage.setItem('clientCode', encodeURIComponent(clientCode));
+                Storage.setItem('clientCode', clientCode);
+                ClientLogin.fillProgressStatus('Authenticating user...');
                 window.location = req.url;
             }).catch(function(err){
-                localStorage.removeItem('clientCode');
+                Storage.removeItem('clientCode');
                 ClientLogin.fillError(JSON.stringify(err));
                 document.querySelector('form.form-login input').disabled = document.querySelector('form.form-login button').disabled = false;
             });

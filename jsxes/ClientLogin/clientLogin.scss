@@ -72,6 +72,31 @@
         text-align: center;
       }
     }
+    #loginProgress {
+      border: none;
+      color: $textColor;
+      background-color: transparent;
+      line-height: 3em;
+      position: relative;
+      padding-left: 2em;
+      margin-top: -1em;
+      &:empty { display: none; }
+      &:not(:empty):before {
+        content: '\f110';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        margin-top: -.5em;
+        animation: fa-spin 1s infinite;
+        display: inline-block;
+        font: normal normal normal 1em FontAwesome; // shortening font declaration
+        font-size: 1em; // can't have font-size inherit on line above, so need to override
+        text-rendering: auto; // optimizelegibility throws things off #1094
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        transform: translate(0, 0);
+      }
+    }
     input {
       margin-bottom: -1px;
       border-radius: 4px;
@@ -109,6 +134,22 @@
       vertical-align: middle;
       cursor: pointer;
       overflow: visible;
+      &.disabled, &:disabled {
+        background-color: #cdcdcd;
+        border-color: #a1a1a1;
+        cursor: default;
+        pointer-events: none;
+      }
+      &#exitSystem {
+        float: right;
+        width: auto;
+        padding: 0 10px;
+        font-size: 1em;
+        line-height: 2em;
+        color: black;
+        background-color: #cbcbcb;
+        border-color:#aaaaaa;
+      }
     }
   }
 }

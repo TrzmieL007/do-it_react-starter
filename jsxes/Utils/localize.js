@@ -2,7 +2,7 @@
  * Created by trzmiel007 on 30/11/16.
  */
 
-var english = {
+const english = {
     AccessibilityOptions : "Accessibility Options",
     AccessibilityOptions_Colour : "Colour",
     AccessibilityOptions_AdjustingTextSize : "Adjusting the size of text",
@@ -10,7 +10,7 @@ var english = {
 
     Welcome : "Welcome"
 };
-var polish = {
+const polish = {
     AccessibilityOptions : "Opcje ułatwiania dostępu",
     AccessibilityOptions_Colour : "Kolor",
     AccessibilityOptions_AdjustingTextSize : "Dopasowywanie rozmiaru tekstu",
@@ -19,9 +19,9 @@ var polish = {
     Welcome : "Wilkomen ;P"
 };
 
-var translations = {
-    en: english,
-    pl: polish
+const translations = {
+    '1': english,
+    '14': polish
 };
 
 function cantFindKey(translation){
@@ -30,7 +30,7 @@ function cantFindKey(translation){
 
 module.exports = class Translator {
     constructor(dfltLanguage){
-        this.languages = { polish : "pl", english : "en"};
+        this.languages = { polish : "14", english : "1"};
         this.language = this.getLanguageCode(dfltLanguage);
         this.currLang = () => {
             if(!this.language) throw new Error("You have to set the language before you can use default one");
@@ -38,7 +38,7 @@ module.exports = class Translator {
         }
     }
     getLanguageCode(l){
-        var res = null;
+        let res = null;
         Object.keys(this.languages).some(k => k == l ? (res = this.languages[k],1) : this.languages[k] == l ? (res = l,1) : 0);
         return res;
     }

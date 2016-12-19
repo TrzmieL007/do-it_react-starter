@@ -12,7 +12,6 @@ class ModuleContent extends React.Component {
     constructor(props) {
         super(props);
         this.state = { moduleInfo : null };
-        this.getModule(props.params.id.toString());
     }
     componentWillReceiveProps(props){
         if(this.props.params.id !== props.params.id){
@@ -23,11 +22,30 @@ class ModuleContent extends React.Component {
     shouldComponentUpdate(nextProps, nextState){
         return this.props.params.id !== nextProps.params.id || !common.compareObj(this.state.moduleInfo, nextState.moduleInfo);
     }
+    componentDidMount(){
+        this.getModule(this.props.params.id);
+    }
     getModule(id){
-        $.get('http://localhost:8080/doItAPI/modules',{
+        if(id == 'overview'){
+            let description = <div dangerouslySetInnerHTML={{__html:Storage.getItem('clientData').IntroductionText || "<p>There are a number of modules in different folders to complete which will help to highlight both your strengths and your challenges.</p><p>After you have completed a module you will be provided with some guidance and resources. </p><p>Try to do them in the order they appear in the folders.</p><p>When you are ready click 'Start'.</p>"}}/>;
+            let startAt = Storage.getItem('modules');
+            startAt = Array.isArray(startAt) && startAt.length > 1 ? startAt[1].id : null;
+            this.setState({ moduleInfo : { name : "Welcome to Do-IT Profiler", description, startAt }});
+        }else{
+            //Storage.getItem({})
+            /*$.ajax({
+                url: "http://doitwebapitest.azurewebsites.net/api/2.0/Assessment/"+id,
+                authenticate: 1,
+                headers: { ClientCode : Storage.getItem('clientCode') },
+                done: d => {
+
+                }
+            });*/
+        }
+        /*$.get('http://localhost:8080/doItAPI/modules',{
             clientCode : this.props.appState.client.clientCode.toLowerCase(),
             id: id || this.props.params.id
-        },res => this.setState({ moduleInfo : res }));
+        },res => this.setState({ moduleInfo : res }));*/
     }
     render() {
         if(!this.state.moduleInfo) return <span/>;
@@ -54,14 +72,11 @@ class ModuleContent extends React.Component {
                 <Link to={this.props.route.path.replace(':id',this.state.moduleInfo.startAt)} className="btn btn-lg btn-primary btn-block goto-next-module-group">Start</Link>
             </div>
         </div>;
-        let description = this.state.moduleInfo.description ? this.state.moduleInfo.description.hasOwnProperty('lines')
-            ? this.state.moduleInfo.description.lines.map((line,i) => <p key={i}>{line}</p>)
-            : this.state.moduleInfo.description : null;
         return (<div className="tab-content" styleName="content">
             {this.state.moduleInfo.name?<h2 className="page-header" tabIndex="0" style={{outline: "none"}}>{this.state.moduleInfo.name}</h2>:null}
             <div>
                 {this.state.moduleInfo.descriptionAudio?<Audio src={this.state.moduleInfo.descriptionAudio} preload="auto" />:null}
-                {description}{this.state.moduleInfo.note ? <div><b>Note</b>{this.state.moduleInfo.note}</div> : null}
+                {this.state.moduleInfo.description}
             </div>
             {this.props.params.id == 'overview' && this.state.moduleInfo.iframe ?
                 <span>
@@ -74,8 +89,8 @@ class ModuleContent extends React.Component {
                 </span>
             :
                 <span>
-                    {description?<br/>:null}
-                    {description?<br/>:null}
+                    {this.state.moduleInfo.description?<br/>:null}
+                    {this.state.moduleInfo.description?<br/>:null}
                     <ul className="module-icons thumbnails">
                         {list}
                     </ul>
