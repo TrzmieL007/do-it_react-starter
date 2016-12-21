@@ -8,6 +8,8 @@ import Link from 'react-router/lib/Link';
 import Audio from '../Components/audio';
 import { Storage } from '../../Utils/utils';
 
+import Reactify from '../../Utils/reactify';
+
 class ModuleContent extends React.Component {
     constructor(props) {
         super(props);
@@ -15,46 +17,122 @@ class ModuleContent extends React.Component {
     }
     componentWillReceiveProps(props){
         if(this.props.params.id !== props.params.id){
+            $.abortAllUnfinishedCalls('ModuleContent');
             this.setState({ moduleInfo : null });
             this.getModule(props.params.id.toString());
         }
     }
-    shouldComponentUpdate(nextProps, nextState){
-        return this.props.params.id !== nextProps.params.id || !common.compareObj(this.state.moduleInfo, nextState.moduleInfo);
-    }
     componentDidMount(){
         this.getModule(this.props.params.id);
     }
+    componentWillUnmount(){
+        $.abortAllUnfinishedCalls('ModuleContent');
+        this.mounted = false;
+    }
+
     getModule(id){
+        id = !id && id != 0 ? this.props.params.id : id;
+        let modules = Storage.getItem('modules');
         if(id == 'overview'){
-            let description = <div dangerouslySetInnerHTML={{__html:Storage.getItem('clientData').IntroductionText || "<p>There are a number of modules in different folders to complete which will help to highlight both your strengths and your challenges.</p><p>After you have completed a module you will be provided with some guidance and resources. </p><p>Try to do them in the order they appear in the folders.</p><p>When you are ready click 'Start'.</p>"}}/>;
-            let startAt = Storage.getItem('modules');
-            startAt = Array.isArray(startAt) && startAt.length > 1 ? startAt[1].id : null;
+            let description = <Reactify htmlString={Storage.getItem('clientData').IntroductionText} />;
+            let startAt = modules && Object.keys(modules).length > 1 ? Object.keys(modules).sort()[0] : null;
             this.setState({ moduleInfo : { name : "Welcome to Do-IT Profiler", description, startAt }});
         }else{
-            //Storage.getItem({})
-            /*$.ajax({
-                url: "http://doitwebapitest.azurewebsites.net/api/2.0/Assessment/"+id,
-                authenticate: 1,
-                headers: { ClientCode : Storage.getItem('clientCode') },
-                done: d => {
-
-                }
+            if(!modules) setTimeout(this.getModule.bind(this),512);
+            this.setState({moduleInfo : {
+                name: modules[id].name,
+                description: modules[id].description,
+                descriptionAudio: common.getSourceURL()+modules[id].descriptionSoundFile,
+                modules: []
+            }});
+            /*modules[id].surveys.forEach(survey => {
+                $.ajax({
+                    url: "/Survey/"+survey.sid,
+                    authenticate: 1,
+                    headers: { ClientCode : Storage.getItem('clientCode') },
+                    done: d => {
+                        // console.log(d);
+                        let moduleInfo = Object.assign({},this.state.moduleInfo);
+                        moduleInfo.modules.push({
+                            name: d.IconName,
+                            id: 'sid'+d.SurveyId,
+                            order: survey.order,
+                            icon: {
+                                name: d.IconFontName,
+                                size: d.IconFontSize,
+                                offs: d.IconFontMarginOffset,
+                                file: d.IconImageFile
+                            }
+                        });
+                        this.setState({ moduleInfo });
+                        Storage.setItem('sid'+d.SurveyId,d);
+                    },
+                    register: 'ModuleContent'
+                    // always: (a,b)=>console.log('survey %o,\nstatus %o',survey,b)
+                });
             });*/
+            /*modules[id].assessments.forEach(assessment => {
+                $.ajax({
+                    url: "/Assessment/"+assessment.id,
+                    authenticate: 1,
+                    headers: { ClientCode : Storage.getItem('clientCode') },
+                    done: d => {
+                        // console.log(d);
+                        let moduleInfo = Object.assign({},this.state.moduleInfo);
+                        moduleInfo.modules.push({
+                            name: d.IconName,
+                            id: 'id'+d.Id,
+                            order: assessment.order,
+                            icon: {
+                                name: d.IconFontName,
+                                size: d.IconFontSize,
+                                offs: d.IconFontMarginOffset,
+                                file: d.Icon
+                            }
+                        });
+                        this.setState({ moduleInfo });
+                        Storage.setItem('id'+d.Id,d);
+                    },
+                    register: 'ModuleContent'
+                    //always: (a,b)=>console.log('status %o',b)
+                });
+            });*/
+            modules[id].assessments.forEach(assessment => {
+                $.ajax({
+                    url: "/Test",
+                    data: { "$filter" : "TestId eq "+assessment.id },
+                    authenticate: 1,
+                    done: d => {
+                        let ass = d[0];
+                        let moduleInfo = Object.assign({},this.state.moduleInfo);
+                        moduleInfo.modules.push({
+                            name: ass.IconName,
+                            id: 'id'+ass.TestId,
+                            order: assessment.order,
+                            icon: {
+                                name: ass.IconFontName,
+                                size: ass.IconFontSize,
+                                offs: ass.IconFontMarginOffset,
+                                file: ass.Icon
+                            }
+                        });
+                        this.setState({ moduleInfo });
+                        Storage.setItem('assessmentHeader-id'+d.TestId,ass);
+                    },
+                    register: 'ModuleContent'
+                    //always: (a,b)=>console.log('status %o',b)
+                });
+            });
         }
-        /*$.get('http://localhost:8080/doItAPI/modules',{
-            clientCode : this.props.appState.client.clientCode.toLowerCase(),
-            id: id || this.props.params.id
-        },res => this.setState({ moduleInfo : res }));*/
     }
     render() {
-        if(!this.state.moduleInfo) return <span/>;
-        let list = this.state.moduleInfo.modules ? this.state.moduleInfo.modules.map((m,i) =>
-            <li key={i}>
+        if(!this.state.moduleInfo) return <span />;
+        let list = this.state.moduleInfo.modules ? this.state.moduleInfo.modules.sort((o1,o2)=>o1.order-o2.order).map(m =>
+            <li key={m.id}>
                <Link data-id={m.id} to={(m.id.match(/^sid[0-9]+/)?"/survey/":"/assessment/")+m.id.replace(/^s?id/,'')} className="module-icon-a">
                    <div tabIndex="0" role="button" className="module-icon">
                        <div className="module-icon-image">
-                           <i className={m.icon} style={{fontSize:'6em',marginLeft:0}} />
+                           <i className={m.icon.name} style={{fontSize:m.icon.size+'em',marginLeft:m.icon.offs+'px'}} />
                        </div>
                        <div className="module-icon-text">
                            {m.name}
@@ -78,24 +156,13 @@ class ModuleContent extends React.Component {
                 {this.state.moduleInfo.descriptionAudio?<Audio src={this.state.moduleInfo.descriptionAudio} preload="auto" />:null}
                 {this.state.moduleInfo.description}
             </div>
-            {this.props.params.id == 'overview' && this.state.moduleInfo.iframe ?
-                <span>
-                    <iframe
-                        src={this.state.moduleInfo.iframe.src}
-                        width={this.state.moduleInfo.iframe.width}
-                        height={this.state.moduleInfo.iframe.height}
-                        frameBorder="0" />
-                    <br/><br/><br/>{list}
-                </span>
-            :
-                <span>
-                    {this.state.moduleInfo.description?<br/>:null}
-                    {this.state.moduleInfo.description?<br/>:null}
-                    <ul className="module-icons thumbnails">
-                        {list}
-                    </ul>
-                </span>
-            }
+            <span>
+                {this.state.moduleInfo.description?<br/>:null}
+                {this.state.moduleInfo.description?<br/>:null}
+                <ul className="module-icons thumbnails">
+                    {list}
+                </ul>
+            </span>
         </div>);
     }
 }

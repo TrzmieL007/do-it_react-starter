@@ -13,9 +13,19 @@ class Audio extends React.Component {
     }
     componentWillReceiveProps(newProps){
         if(newProps.playNow && this.audio) this.audio.play();
+        else if(newProps.src !== this.props.src) this.audio.pause();
+    }
+    componentDidUpdate(prevProps){
+        if(prevProps.src != this.props.src && this.audio){
+            this.setState({ loading : 0 });
+            setTimeout(()=>this.audio.load(),1);
+        }
+    }
+    componentWillUnmount(){
+        this.audio.pause();
     }
 
-    render() {
+    render(){
         let mp3 = this.props.src.replace(/\.[mp3og]{3}$/,".mp3");
         let ogg = this.props.src.replace(/\.[mp3og]{3}$/,".ogg");
         return (<span>
@@ -74,6 +84,7 @@ class Audio extends React.Component {
             setTimeout(this.removeLoader.bind(this),2048);
             // if(this.props.autoplay) this.audio.play();
         }
+        console.log('loaded progress %o',loaded);
     }
     removeLoader(){
         if(!this.audio) return;

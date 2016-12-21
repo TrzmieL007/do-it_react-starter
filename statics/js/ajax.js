@@ -87,6 +87,7 @@ function simplify(method, url, data, done, fail, always, progress, async, config
     let get = method.toLowerCase() === 'get';
     data = get ? parseData(data) : data;                                    if(debug) console.log('Ajax data: %o',data);
     let xmlDoc = getXmlDoc();
+    xmlDoc.identifier = +(new Date())+Math.random();
     let p = progress ? null : createProgress();
     async = (async !== undefined && async !== null) ? async : true;
     xmlDoc.open(method, url + (get && data ? '?' +data : ''), async);       if(debug) console.log('Ajax url: %s',url + (get && data ? '?' +data : ''));
@@ -111,6 +112,7 @@ function simplify(method, url, data, done, fail, always, progress, async, config
     let progressFunction = progress ? progress : function(e){updateProgress(e,p)};
     xmlDoc.addEventListener("progress", progressFunction);
     get?xmlDoc.send():xmlDoc.send(JSON.stringify(data));
+    return xmlDoc;
 }
 function createProgress(){
     let p = document.createElement('div');
@@ -134,25 +136,55 @@ function updateProgress(oEvent,p){
     return null;
 }
 
+var registered = {};
 const Ajax = {
     get : function(url, data, done, fail, always, progress){
-        simplify('GET',url,data,done,fail,always,progress);
+        return simplify('GET',url,data,done,fail,always,progress);
     },
     post : function(url, data, done, fail, always, progress){
-        simplify('POST',url,data,done,fail,always,progress);
+        return simplify('POST',url,data,done,fail,always,progress);
     },
     ajax : function(config){
-        if(!config || typeof config !== 'object'){
-            throw new Error("Configuration missing or wrong format!");
+        if(!config || typeof config !== 'object') throw new Error("Configuration missing or wrong format!");
+        if(!config.url) throw new Error("No URL supplied.");
+        if(config.url.match(/^\/[a-zA-Z]+/)) config.url = this.getAPIuri() + config.url;
+        if(config.beforeSend && typeof config.beforeSend === 'function') config.beforeSend.call();
+        let xmlDoc = simplify(config.method?config.method:'GET',config.url,config.data,config.done,config.fail,config.always,config.onProgress,config.async,config);
+        if(config.register){
+            if(!registered.hasOwnProperty(config.register)) registered[config.register] = {};
+            xmlDoc.addEventListener('readystatechange', () => (xmlDoc.readyState == 4 ? delete registered[config.register][xmlDoc.identifier] : null));
+            return registered[config.register][xmlDoc.identifier] = xmlDoc;
         }
-        if(!config.url){
-            throw new Error("No URL supplied.");
-        }
-        if(config.beforeSend && typeof config.beforeSend === 'function'){
-            config.beforeSend.call();
-        }
-        simplify(config.method?config.method:'GET',config.url,config.data,config.done,config.fail,config.always,config.onProgress,config.async,config);
+        return xmlDoc;
     },
+    ///////////
+    registerCall : function registerCallF(xmlDoc,registerName){
+        var putItHere = registered;
+        if(registerName){
+            if(!registered.hasOwnProperty(registerName)) registered[registerName] = {};
+            putItHere = registered[registerName];
+        }
+        xmlDoc.addEventListener('readystatechange', () => (xmlDoc.readyState == 4 ? delete putItHere[xmlDoc.identifier] : null));
+        return putItHere[xmlDoc.identifier] = xmlDoc;
+    },
+    getRegisteredCalls : function(){
+        return registered;
+    },
+    abortAllUnfinishedCalls : function abortAllUnfinishedCallsF(registerName){
+        if(registerName && registered[registerName]){
+            Object.keys(registered[registerName]).forEach(x => registered[registerName][x].abort());
+            delete registered[registerName];
+        }else{
+            Object.keys(registered).forEach(k => {
+                if(registered[k].constructor.name == "XMLHttpRequest")
+                    registered[k].abort();
+                else if(registered[k].constructor.name == "Object")
+                    Object.keys(registered[k]).forEach(x => registered[k][x].abort());
+                delete registered[registerName];
+            });
+        }
+    },
+    /////////////////
     fail : function(callback, xhr, code, reason){
         if(callback instanceof Function) {
             console.group(code);
@@ -172,6 +204,10 @@ const Ajax = {
     },
     setDebug : function(deb){
         debug = deb;
+    },
+    getAPIuri : function(){
+        // return 'http://betaapi.doitprofiler.net/api/2.0';
+        return 'http://doitwebapitest.azurewebsites.net/api/2.0';
     }
 };
 

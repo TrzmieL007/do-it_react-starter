@@ -50,20 +50,20 @@ class ClientLogin extends Component {
                 </header>
                 <div id="body">
                     <div className="container">
-                        <form className="form-login" styleName="form-login" onSubmit={e=>(e.preventDefault && e.preventDefault(),this.props.handleLogin(),false)}>
+                        <form className={this.props.disabled?"ready":'form-login'} styleName="form-login" onSubmit={e=>(e.preventDefault && e.preventDefault(),this.props.handleLogin(),false)}>
                             <h2>Client Code Login</h2>
                             <br/>
                             <div id="errorMessage" />
                             <label className="sr-only" htmlFor="ClientCode">Client Code</label>
-                            <input autoFocus={true} id="ClientCode" name="ClientCode" placeholder="Enter Client Code:" required="true" type="text" value={this.clientChosen} readOnly={this.clientChosen} />
+                            <input autoFocus={true} id="ClientCode" name="ClientCode" placeholder="Enter Client Code:" required="true" type="text" value={this.clientChosen} readOnly={this.clientChosen} disabled={this.props.disabled} />
                             <br/>
                             <div id="loginProgress" />
-                            <button type="submit">{this.clientChosen?"Authenticate":"Go"}</button>
+                            <button type="submit" disabled={this.props.disabled}>{this.clientChosen?"Authenticate":"Go"}</button>
                             <br/>
                             <a href="#" onClick={this.showWindow}>
                                 What is my Client Code?
                             </a>
-                            {this.clientChosen ? <button id="exitSystem" type="button" onClick={signout}>Exit System</button> : null}
+                            {this.clientChosen ? <button id="exitSystem" type="button" onClick={signout} disabled={this.props.disabled}>Exit System</button> : null}
                         </form>
                     </div>
                 </div>
@@ -81,7 +81,8 @@ class ClientLogin extends Component {
 }
 
 ClientLogin.propTypes = {
-    handleLogin: React.PropTypes.func.isRequired
+    handleLogin: React.PropTypes.func.isRequired,
+    disabled: React.PropTypes.bool
 };
 
 import CSSModules from 'react-css-modules';

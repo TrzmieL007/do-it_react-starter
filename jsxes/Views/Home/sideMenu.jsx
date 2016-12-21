@@ -11,17 +11,23 @@ class SideMenu extends React.Component {
     constructor(props) {
         super(props);
         this.state = { listOfModules : [] };
-        this.getListOfModules();
         this.client = common.getClientData();
+    }
+    componentDidMount(){
+        this.mounted = true;
+        this.getListOfModules();
+    }
+    componentWillUnmount(){
+        this.mounted = false;
     }
     componentWillReceiveProps(props){
         if(this.props.params.id !== props.params.id){
             this.forceUpdate();
         }
     }
-    shouldComponentUpdate(nextProps, nextState){
+    /*shouldComponentUpdate(nextProps, nextState){
         return this.props.params.id !== nextProps.params.id || !common.compareObj(this.state.listOfModules, nextState.listOfModules);
-    }
+    }*/
     sortingModules(o1,o2){
         return o1.id == 'overview' ? -1 : o2.id == 'overview' ? 1 : o1.id - o2.id;
     }
@@ -32,16 +38,19 @@ class SideMenu extends React.Component {
         // DisplayOrder - W jakiej kolejności w grupie występuje :)
         // ClientId - jak nazwa wskazuje
         // AssessmentId - id konkretnego assessmentu
+        let ms = Storage.getItem('modules');
+        ms = ms ? Object.keys(ms).map(m => ms[m]).sort(this.sortingModules) : [];
+        this.setState({listOfModules:ms});
         let lom = { overview : { id : 'overview', name : "Overview" } };
         $.ajax({
-            url: 'http://doitwebapitest.azurewebsites.net/api/2.0/ClientAssessment',
+            url: '/ClientAssessment',
             data: { '$filter' : 'ClientId eq '+Storage.getItem('clientData').ClientId },
             authenticate: 1,
-            headers: { ClientCode : Storage.getItem('clientCode') },
             done: d => {
-                console.log(d);
+                if(!this.mounted) return;
                 if(Array.isArray(d)) {
-                    lom = d.reduce((p,a) => {
+                    lom = d.reduce((p,a,i) => {
+                        if(a.DisplayOrder == 999) a.DisplayOrder = i;
                             if(p.hasOwnProperty(a.ModuleGroupId)){
                                 ++p[a.ModuleGroupId].modules;
                                 p[a.ModuleGroupId].assessments.push({ id : a.AssessmentId, order : a.DisplayOrder });
@@ -56,19 +65,18 @@ class SideMenu extends React.Component {
                             return p;
                         },lom);
                     $.ajax({
-                        url: 'http://doitwebapitest.azurewebsites.net/api/2.0/ClientSurvey',
+                        url: '/ClientSurvey',
                         data: { '$filter' : 'ClientId eq '+Storage.getItem('clientData').ClientId },
                         authenticate: 1,
-                        headers: { ClientCode : Storage.getItem('clientCode') },
                         done: d => {
-                            console.log(d);
                             if(Array.isArray(d)){
-                                d.reduce((p,s) => {
+                                d.reduce((p,s,i) => {
+                                    if(s.DisplayOrder == 999) s.DisplayOrder = i+Object.keys(lom).length;
                                     if(p.hasOwnProperty(s.ModuleGroupId)){
                                         ++p[s.ModuleGroupId].modules;
                                         p[s.ModuleGroupId].surveys.push({ sid : s.SurveyId, order : s.DisplayOrder });
                                     }
-                                    else p[a.ModuleGroupId] = {
+                                    else p[s.ModuleGroupId] = {
                                         id : s.ModuleGroupId,
                                         modules : 1,
                                         name : "Modules",
@@ -79,13 +87,31 @@ class SideMenu extends React.Component {
                                     return p;
                                 },lom);
                             }
-                            this.setState({listOfModules: Storage.setItem('modules',Object.keys(lom).map(m => lom[m]).sort(this.sortingModules))})
+                            this.setState({listOfModules: Object.keys(Storage.setItem('modules',lom)).map(m => lom[m]).sort(this.sortingModules)});
+                            Object.keys(lom).forEach(gid => gid=="overview"?null:$.ajax({
+                                url: '/ModuleGroupLocalised',
+                                data: { '$filter' : 'ModuleGroupId eq '+gid },
+                                authenticate: 1,
+                                headers: { ClientCode : Storage.getItem('clientCode') },
+                                done: d => {
+                                    let mgl = d[0];
+                                    let module = lom[mgl.ModuleGroupId];
+                                    module.description = mgl.Description;
+                                    module.descriptionSoundFile = mgl.DescriptionSoundFile;
+                                    module.name = mgl.Name;
+                                    module.reportDescription = mgl.ReportDescription;
+                                    this.setState({listOfModules: Object.keys(Storage.setItem('modules',lom)).map(m => lom[m]).sort(this.sortingModules)});
+                                }
+                            }));
                         },
-                        fail: () => this.setState({listOfModules: Storage.setItem('modules',Object.keys(lom).map(m => lom[m]).sort(this.sortingModules))})
+                        fail: () => this.setState({listOfModules: Object.keys(Storage.setItem('modules',lom)).map(m => lom[m]).sort(this.sortingModules)})
                     });
                 }
             },
-            fail: function(){ console.error(arguments); }
+            fail: (res,stat,err) => {
+                console.error("response: %o,\nstatusCode: %o,\nerror: %o",res,stat,err);
+                this.setState({listOfModules:ms});
+            }
         });
         //
         // $.get('http://localhost:8080/doItAPI/modulesList',{ clientCode : this.props.appState.client.clientCode.toLowerCase() },(res)=>{
@@ -95,7 +121,7 @@ class SideMenu extends React.Component {
 
     render() {
         let links = this.state.listOfModules.map((m,i) => <li key={i} className={(m.id=='overview'?'':"nav-notgrouped")+(m.id==this.props.params.id?" active":"")}>
-            <Link to={this.props.route.path.replace(':id',m.id)} aria-expanded={(m.id==this.props.params.id).toString()}>
+            <Link to={this.props.route.path.replace(':id',m.id)}>
                 <i className="icon-chevron-right" />{m.name}
                 {m.modules?<span className="pull-right text-info">{m.completed||0} / {m.modules}</span>:null}
             </Link>

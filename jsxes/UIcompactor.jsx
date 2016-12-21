@@ -21,6 +21,7 @@ let oidSettings = {
 window.client = new Oidc.OidcClient(oidSettings);
 
 function getClientData() {
+    if(Storage.getItem('clientData')) return getUserData();
     let data = {
         "$filter": "Code eq '" + Storage.getItem('clientCode') + "'",
         "$select": "ClientId,HasLogo,Name,Tests,IntroductionText,BrandingText,APIAccessKey"
@@ -28,11 +29,9 @@ function getClientData() {
     ClientLogin.fillProgressStatus('Fetching Client data...');
     $.ajax({
         authenticate: 1,
-        url: 'http://doitwebapitest.azurewebsites.net/api/2.0/Client',
+        url: '/Client',
         data,
-        headers: { ClientCode : Storage.getItem('clientCode') },
         done : d => {
-            console.log(d);
             if(d.length) {
                 let cl = d[0];
                 Storage.setItem('clientData',cl);
@@ -50,9 +49,8 @@ function getUserData() {
     ClientLogin.fillProgressStatus('Fetching User data...');
     $.ajax({
         authenticate: 1,
-        url: 'http://doitwebapitest.azurewebsites.net/api/2.0/User',
+        url: '/User',
         data: data,
-        headers: { ClientCode : Storage.getItem('clientCode') },
         done : d => {
             Storage.setItem('userData',d[0]);
             drawUI(1);
@@ -102,8 +100,9 @@ function checkLogout(){
 }
 
 checkLogin().then(function(){
-    getClientData();
-    getUserData();
+    // render(<ClientLogin handleLogin={()=>null} disabled={true} />,document.getElementById('ContentHolder'));
+    // getClientData();
+    drawUI(1);
 },function(){
     checkLogout();
     drawUI(0);

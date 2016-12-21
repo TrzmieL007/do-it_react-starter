@@ -62,7 +62,7 @@ class Assessment extends React.Component {
             return false;
     }
     getAssessment(id){
-        return Storage.getItem('assId_'+(id || this.props.params.assessmentId));
+        return Storage.getItem('id'+(id || this.props.params.assessmentId));
     }
     getSounds(o,prefix){
         prefix = prefix || '';

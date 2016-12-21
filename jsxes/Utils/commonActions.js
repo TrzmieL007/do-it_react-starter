@@ -80,24 +80,6 @@ export default class CommonActions {
     }
 
     static getSourceURL(){ return /*"https://doitprofiler.net/"*/"https://doitcdn.azureedge.net/shared/"; }
-
-    /*sendTestRequestWithA() {
-        $.ajax({
-            url: 'http://doitwebapitest.azurewebsites.net/api/2.0/Test/',
-            data: { token : 'F00B9522AD5C' }, // pda14mag
-            done: result => {
-                console.log(result);
-            },
-            fail: $.fail,
-            always: (response,status) => {
-                console.group('always');
-                console.log(response);
-                console.log(status);
-                console.groupEnd();
-            },
-            authenticate: true
-        });
-    }*/
 }
 
 export function signout(){

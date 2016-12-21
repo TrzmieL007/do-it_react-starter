@@ -1,6 +1,5 @@
 import './ui.scss';
 import React from 'react';
-// import $ from '../../statics/js/ajax';
 
 import PopupWindow from '../PopupWindow/popupWindow';
 import hashHistory from 'react-router/lib/hashHistory';
@@ -11,7 +10,6 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as AppStoreActions from '../FluxImpl/appStoreActions';
 import * as WindowsActions from '../FluxImpl/windowsStoreActions';
-// import $ from '../../statics/js/ajax';
 import { Storage } from '../Utils/utils';
 
 class UI extends React.Component {
@@ -19,11 +17,6 @@ class UI extends React.Component {
         super(props);
         this.state = {};
         this.routes = Navigation.routes;
-        /*$.get('http://localhost:8080/doItAPI/assessments', {
-            clientCode: props.appState.client.clientCode.toLowerCase()
-        },res => {
-            Object.keys(res).forEach(c => Storage.setItem('assId_'+c,res[c]));
-        });*/
     }
 
     componentWillReceiveProps(nextProps){
