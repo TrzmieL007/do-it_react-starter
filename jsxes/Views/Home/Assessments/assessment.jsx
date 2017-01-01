@@ -10,6 +10,7 @@ import Introduction from './introduction';
 import Progress from './progress';
 import Audio from '../../Components/audio';
 import common from '../../../Utils/commonActions';
+import Spinner from '../../Components/spinner';
 
 class Assessment extends React.Component {
     constructor(props) {
@@ -105,7 +106,11 @@ class Assessment extends React.Component {
         });
     }
     componentDidMount(){
+        document.body.style.backgroundColor = '#ffffff';
         this.preloadAllImages();
+    }
+    componentWillUnmount(){
+        document.body.style.backgroundColor = null;
     }
     stripAssessmentData(){
         return Object.assign({},this.assessment,{ AssessmentQuestions : undefined });
@@ -122,9 +127,10 @@ class Assessment extends React.Component {
     }
 
     render() {
+        console.log(this.assessment);
         if(!this.assessment){
             this.interval = setInterval(()=>(this.init()?this.forceUpdate():null),128);
-            return <div styleName="spinner" />;
+            return <Spinner/>;
         }
         if(this.interval){
             clearInterval(this.interval);

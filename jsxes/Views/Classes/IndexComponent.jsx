@@ -6,6 +6,8 @@ import common from '../../Utils/commonActions';
 import ExpandableMenu from '../Components/expandableMenu';
 import TopMenuExpand from '../Components/topMenuExpand';
 
+import Reactify from '../../Utils/reactify';
+
 class Index extends React.Component {
     constructor(props){
         super(props);
@@ -139,10 +141,11 @@ class Index extends React.Component {
                 { style : { maxWidth : 555 } }
             );
         };
-        let dangerousHTML = {
-            __html : this.props.locale.getLocaleString("AccessibilityOptions_AdjuctingTextSize_Info")
-                .replace(/CTRL/g,navigator.platform.toString().indexOf("Mac") > -1 ? "Command" : "Ctrl")
-        };
+        let react = Reactify(this.props.locale.getLocaleString("AccessibilityOptions_AdjuctingTextSize_Info").replace(/CTRL/g,navigator.platform.toString().indexOf("Mac") > -1 ? "Command" : "Ctrl"));
+        // let dangerousHTML = {
+        //     __html : this.props.locale.getLocaleString("AccessibilityOptions_AdjuctingTextSize_Info")
+        //         .replace(/CTRL/g,navigator.platform.toString().indexOf("Mac") > -1 ? "Command" : "Ctrl")
+        // };
         let colors = ["default","white","pastelorange","pastelturquoise","pastelpurple","pastelgreen","pastelblue","blue","hivis","blackyellow","yellowblack"];
         getContent = () => {
             let buttons = colors.map((c,i) => <label onClick={themeChange.bind(this,c)} key={i}
@@ -158,7 +161,8 @@ class Index extends React.Component {
                     <div className="clear-fix"></div>
                 </div>
                 <h3>{this.props.locale.getLocaleString("AccessibilityOptions_AdjustingTextSize")}</h3>
-                <span dangerouslySetInnerHTML={dangerousHTML} />
+                {/*<span dangerouslySetInnerHTML={dangerousHTML} />*/}
+                {react}
             </span>;
         };
         this.props.actions.openWindow(

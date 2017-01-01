@@ -34,19 +34,6 @@
       }
     }
   }
-  .loadingProgressDiv {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 999;
-    .loadingImages, .loadingSounds {
-      &:global(.loading) { height: 4px; }
-      &:global(.finished) { animation: finished 1024ms both; }
-    }
-    .loadingImages { background-color: #FFEE66; }
-    .loadingSounds { background-color: #0094CE; }
-  }
 }
 @keyframes :local(div-spinner) {
   0% { transform: rotate(45deg); }
@@ -56,19 +43,4 @@
   0% { stroke-dasharray: 0 0 0 204px; }
   50% { stroke-dasharray: 0 0 204px 204px; }
   100% { stroke-dasharray: 0 204px 204px 204px; }
-}
-
-@keyframes finished {
-  0% {
-    opacity: 1;
-    height: 4px;
-  }
-  50% {
-    opacity: 0;
-    height: 4px;
-  }
-  100% {
-    opacity: 0;
-    height: 0;
-  }
 }

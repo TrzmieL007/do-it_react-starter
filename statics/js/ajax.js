@@ -83,9 +83,9 @@ function handleError(e,xmlDoc,fail,always){
     ) : console.error('ERROR: ',e);
     always instanceof Function ? setTimeout(()=>always.call(undefined, xmlDoc.response, xmlDoc.status),0) : '';
 }
-function simplify(method, url, data, done, fail, always, progress, async, config){
-    let get = method.toLowerCase() === 'get';
-    data = get ? parseData(data) : data;                                    if(debug) console.log('Ajax data: %o',data);
+function simplify(method, url, data, done, fail, always, progress, async, config){if(debug){ console.group('ajax'); console.trace("new Query started processing at "+(new Date())); }
+    let get = method.toLowerCase() === 'get';                               if(get && debug) console.log('Ajax data: %o',data);
+    data = get ? parseData(data) : data;                                    if(!get && debug) console.log('Ajax data: %o',data);
     let xmlDoc = getXmlDoc();
     xmlDoc.identifier = +(new Date())+Math.random();
     let p = progress ? null : createProgress();
@@ -111,6 +111,7 @@ function simplify(method, url, data, done, fail, always, progress, async, config
     xmlDoc.ontimeout = handleError.bind(this,xmlDoc,fail,always);
     let progressFunction = progress ? progress : function(e){updateProgress(e,p)};
     xmlDoc.addEventListener("progress", progressFunction);
+    if(config.beforeSend && typeof config.beforeSend === 'function') config.beforeSend.call(undefined,xmlDoc); if(debug) console.groupEnd();
     get?xmlDoc.send():xmlDoc.send(JSON.stringify(data));
     return xmlDoc;
 }
@@ -148,7 +149,6 @@ const Ajax = {
         if(!config || typeof config !== 'object') throw new Error("Configuration missing or wrong format!");
         if(!config.url) throw new Error("No URL supplied.");
         if(config.url.match(/^\/[a-zA-Z]+/)) config.url = this.getAPIuri() + config.url;
-        if(config.beforeSend && typeof config.beforeSend === 'function') config.beforeSend.call();
         let xmlDoc = simplify(config.method?config.method:'GET',config.url,config.data,config.done,config.fail,config.always,config.onProgress,config.async,config);
         if(config.register){
             if(!registered.hasOwnProperty(config.register)) registered[config.register] = {};
@@ -206,8 +206,8 @@ const Ajax = {
         debug = deb;
     },
     getAPIuri : function(){
-        // return 'http://betaapi.doitprofiler.net/api/2.0';
-        return 'http://doitwebapitest.azurewebsites.net/api/2.0';
+        return 'http://betaapi.doitprofiler.net/api/2.0';
+        // return 'http://doitwebapitest.azurewebsites.net/api/2.0';
     }
 };
 

@@ -6,7 +6,7 @@ import $ from '../../../statics/js/ajax';
 import common from '../../Utils/commonActions';
 import Link from 'react-router/lib/Link';
 import Audio from '../Components/audio';
-import { Storage } from '../../Utils/utils';
+import { Storage, dataFetch } from '../../Utils/utils';
 
 import Reactify from '../../Utils/reactify';
 
@@ -34,7 +34,7 @@ class ModuleContent extends React.Component {
         id = !id && id != 0 ? this.props.params.id : id;
         let modules = Storage.getItem('modules');
         if(id == 'overview'){
-            let description = <Reactify htmlString={Storage.getItem('clientData').IntroductionText} />;
+            let description = Reactify(Storage.getItem('clientData').IntroductionText || "<p>There are a number of modules in different folders to complete which will help to highlight both your strengths and your challenges.</p><p>After you have completed a module you will be provided with some guidance and resources. </p><p>Try to do them in the order they appear in the folders.</p><p>When you are ready click 'Start'.</p>");
             let startAt = modules && Object.keys(modules).length > 1 ? Object.keys(modules).sort()[0] : null;
             this.setState({ moduleInfo : { name : "Welcome to Do-IT Profiler", description, startAt }});
         }else{
@@ -42,7 +42,7 @@ class ModuleContent extends React.Component {
             this.setState({moduleInfo : {
                 name: modules[id].name,
                 description: modules[id].description,
-                descriptionAudio: common.getSourceURL()+modules[id].descriptionSoundFile,
+                descriptionAudio: modules[id].descriptionSoundFile ? common.getSourceURL()+modules[id].descriptionSoundFile : null,
                 modules: []
             }});
             /*modules[id].surveys.forEach(survey => {
@@ -97,6 +97,13 @@ class ModuleContent extends React.Component {
                     //always: (a,b)=>console.log('status %o',b)
                 });
             });*/
+            dataFetch.getData({
+                endpoint: "Test",
+                data: { "$filter" : "TestId eq 9" },
+                callerName: 'ModuleContent',
+                storeName: 'assessmentHeader-id9',
+                success: d => (console.log(d),d)
+            });
             modules[id].assessments.forEach(assessment => {
                 $.ajax({
                     url: "/Test",
@@ -157,8 +164,6 @@ class ModuleContent extends React.Component {
                 {this.state.moduleInfo.description}
             </div>
             <span>
-                {this.state.moduleInfo.description?<br/>:null}
-                {this.state.moduleInfo.description?<br/>:null}
                 <ul className="module-icons thumbnails">
                     {list}
                 </ul>

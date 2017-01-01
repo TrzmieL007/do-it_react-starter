@@ -1,8 +1,8 @@
 import React from 'react';
 import { render } from "react-dom";
 import ClientLogin from './ClientLogin/clientLogin';
-import { Storage } from './Utils/utils';
-import $ from '../statics/js/ajax';
+import { Storage, dataFetch } from './Utils/utils';
+//import $ from '../statics/js/ajax';
 
 // $.setDebug(true);
 let oidSettings = {
@@ -21,12 +21,25 @@ let oidSettings = {
 window.client = new Oidc.OidcClient(oidSettings);
 
 function getClientData() {
-    if(Storage.getItem('clientData')) return getUserData();
     let data = {
         "$filter": "Code eq '" + Storage.getItem('clientCode') + "'",
         "$select": "ClientId,HasLogo,Name,Tests,IntroductionText,BrandingText,APIAccessKey"
     };
-    ClientLogin.fillProgressStatus('Fetching Client data...');
+    dataFetch.getData({
+        endpoint : 'Client',
+        data,
+        storeName : 'clientData',
+        done : (d,ls) => {
+            if(ls) return getUserData();
+            if(d.length){
+                getUserData();
+                return d[0];
+            }
+        },
+        beforeSend : () => ClientLogin.fillProgressStatus('Fetching Client data...')
+    });
+
+    /*ClientLogin.fillProgressStatus('Fetching Client data...');
     $.ajax({
         authenticate: 1,
         url: '/Client',
@@ -39,14 +52,28 @@ function getClientData() {
             }
         },
         fail : d => console.error(d)
-    });
+    });*/
 }
 function getUserData() {
     let email = Storage.getItem('profile').email;
     let data = {
         "$filter": "Email eq '" + email + "'"
     };
-    ClientLogin.fillProgressStatus('Fetching User data...');
+    dataFetch.getData({
+        endpoint : 'User',
+        data,
+        storeName : 'userData',
+        done : (d,ls) => {
+            if(ls) return drawUI(1);
+            if(d.length){
+                drawUI(1);
+                return d[0];
+            }
+        },
+        beforeSend : () => ClientLogin.fillProgressStatus('Fetching User data...')
+    });
+
+    /*ClientLogin.fillProgressStatus('Fetching User data...');
     $.ajax({
         authenticate: 1,
         url: '/User',
@@ -56,7 +83,7 @@ function getUserData() {
             drawUI(1);
         },
         fail: d => console.error(d),
-    });
+    });*/
 }
 function checkLogin(){
     if(window.location.hash.match(/^#\/.+/)) {
@@ -100,9 +127,8 @@ function checkLogout(){
 }
 
 checkLogin().then(function(){
-    // render(<ClientLogin handleLogin={()=>null} disabled={true} />,document.getElementById('ContentHolder'));
-    // getClientData();
-    drawUI(1);
+    render(<ClientLogin handleLogin={()=>null} disabled={true} />,document.getElementById('ContentHolder'));
+    getClientData();
 },function(){
     checkLogout();
     drawUI(0);
@@ -115,7 +141,7 @@ checkLogin().then(function(){
                 ClientLogin.fillError("You have to supply Client Code to proceede");
                 return document.querySelector('form.form-login input').disabled = document.querySelector('form.form-login button').disabled = false;
             }
-            ClientLogin.fillProgressStatus('Prepering Login request...');
+            ClientLogin.fillProgressStatus('Preparing and sending Login request...');
             if(document.getElementById('errorLabel')){
                 ClientLogin.fillError("");
             }

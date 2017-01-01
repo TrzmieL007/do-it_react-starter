@@ -5,7 +5,7 @@ import React from 'react';
 import Link from 'react-router/lib/Link';
 import $ from '../../../statics/js/ajax';
 import common from '../../Utils/commonActions';
-import { Storage } from '../../Utils/utils';
+import { Storage, dataFetch } from '../../Utils/utils';
 
 class SideMenu extends React.Component {
     constructor(props) {
@@ -42,6 +42,16 @@ class SideMenu extends React.Component {
         ms = ms ? Object.keys(ms).map(m => ms[m]).sort(this.sortingModules) : [];
         this.setState({listOfModules:ms});
         let lom = { overview : { id : 'overview', name : "Overview" } };
+
+
+        dataFetch.getData({
+            endpoint: "ClientAssessment",
+            data: { "$filter" : 'ClientId eq '+Storage.getItem('clientData').ClientId },
+            callerName: 'SideMenu',
+            storeName: 'modules-',
+            success: d => (console.log(d),d)
+        });
+
         $.ajax({
             url: '/ClientAssessment',
             data: { '$filter' : 'ClientId eq '+Storage.getItem('clientData').ClientId },

@@ -13,7 +13,11 @@ class Audio extends React.Component {
     }
     componentWillReceiveProps(newProps){
         if(newProps.playNow && this.audio) this.audio.play();
-        else if(newProps.src !== this.props.src) this.audio.pause();
+        else if(newProps.src !== this.props.src){
+            this.audio.pause();
+            clearTimeout(this.removeTimeout);
+            this.removeLoader();
+        }
     }
     componentDidUpdate(prevProps){
         if(prevProps.src != this.props.src && this.audio){
@@ -64,7 +68,7 @@ class Audio extends React.Component {
                         </svg>
                         : <div className={"progress"+(this.state.loading > 99.9 ? " loaded" : "")} style={{width:this.state.loading+'%'}} />)
                     : null}
-            </span>}
+                </span>}
         </span>);
     }
     getProgress(){
@@ -81,7 +85,7 @@ class Audio extends React.Component {
         if(ev.nativeEvent.type == 'loadeddata'){
             if(this.props.onLoaded) this.props.onLoaded();
             if(this.state < 100) this.setState({ loading : 100 });
-            setTimeout(this.removeLoader.bind(this),2048);
+            this.removeTimeout = setTimeout(this.removeLoader.bind(this),2048);
             // if(this.props.autoplay) this.audio.play();
         }
         console.log('loaded progress %o',loaded);
